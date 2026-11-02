@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#030712">
+<link rel="manifest" href="manifest.json">
+<title>AJX Savings Hub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<style>
+:root{--bg-black:#030712;--card-bg:#111827;--border-color:#1f293d;--accent-cyan:#38bdf8;--accent-yellow:#facc15;--accent-red:#ef4444;--accent-emerald:#10b981;--text-muted:#94a3b8}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Times New Roman',Times,serif,Georgia,-apple-system,sans-serif}
+body{background:var(--bg-black);color:#fff;overflow-x:hidden}
+#waveCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none}
+.container{position:relative;z-index:2;max-width:480px;margin:0 auto;min-height:100vh;padding:16px 16px 90px}
+.view-page{display:none}.view-page.active{display:block}
+.auth-container{display:flex;flex-direction:column;justify-content:center;min-height:88vh;text-align:center;gap:18px}
+.auth-title{font-size:2.5rem;font-weight:900;margin-bottom:14px;text-shadow:0 0 20px var(--accent-cyan)}
+.auth-subtitle{font-size:1.05rem;color:var(--text-muted)}
+.input-group{position:relative;margin-bottom:18px}
+.input-group i.left-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:1.25rem;z-index:2}
+.input-group i.right-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:1.2rem;cursor:pointer;z-index:2}
+.input-field{width:100%;background:rgba(0,0,0,.45);border:1px solid #334155;border-radius:14px;padding:16px 16px 16px 52px;color:#fff;font-size:1.05rem;outline:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.6)}
+.input-field.plain{padding-left:16px}
+.input-field:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 4px rgba(56,189,248,.25)}
+.btn-submit{width:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border:none;color:#fff;padding:15px;border-radius:12px;font-size:1.15rem;font-weight:700;cursor:pointer;box-shadow:0 8px 25px rgba(56,189,248,.4);text-transform:uppercase;letter-spacing:1px}
+.btn-submit:active{transform:scale(.97)}
+.btn-small{background:#1d4ed8;border:none;color:#fff;padding:8px 14px;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer}
+.btn-small.green{background:#059669}.btn-small.red{background:#b91c1c}.btn-small.grey{background:#334155}
+.auth-footer{display:flex;justify-content:space-between;margin-top:14px;font-size:.95rem}
+.auth-footer a{color:#fff;text-decoration:none;display:flex;align-items:center;gap:6px;cursor:pointer}
+.err{color:#fca5a5;font-size:.95rem;min-height:20px;margin-bottom:8px}
+.dash-header{display:flex;justify-content:space-between;align-items:center;padding:14px 0 18px;border-bottom:2px solid #1e40af;margin-bottom:18px}
+.dash-brand{font-size:1.8rem;font-weight:900;text-shadow:0 0 15px var(--accent-cyan)}
+.dash-msg-btn{display:flex;flex-direction:column;align-items:center;cursor:pointer;font-size:.8rem}
+.dash-msg-btn i{font-size:1.5rem;margin-bottom:3px}
+.hero-banner{border-radius:16px;padding:20px;margin-bottom:20px;background:linear-gradient(135deg,#0c4a6e,#1e3a8a);border:1px solid var(--accent-cyan);box-shadow:0 12px 35px rgba(0,0,0,.6)}
+.hero-banner b{color:var(--accent-yellow)}
+.hero-banner p{color:#e0f2fe;line-height:1.4;font-size:1.02rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.stat-card{background:#111827;border-radius:14px;overflow:hidden;text-align:center;border:1.5px solid #334155;box-shadow:0 4px 15px rgba(0,0,0,.4)}
+.stat-val{padding:14px 6px;font-size:1.2rem;font-weight:900;line-height:1.1;word-break:break-word}
+.stat-label{background:#1e2937;color:var(--accent-cyan);padding:7px 4px;font-size:.78rem;font-weight:600;text-transform:uppercase}
+.message-panel{background:#0a0f1c;border:2px solid var(--accent-cyan);border-radius:16px;padding:16px;margin-bottom:22px}
+.message-header{display:flex;justify-content:space-between;border-bottom:1.5px solid #334155;padding-bottom:10px;margin-bottom:10px}
+.message-title{font-size:1.25rem;font-weight:700}
+.msg-item{padding:10px 0;font-size:1rem;border-bottom:1px solid #334155;color:var(--accent-cyan)}
+.msg-item:last-child{border-bottom:none}
+.msg-item small{display:block;color:var(--text-muted);margin-top:3px}
+h2.t{text-align:center;margin:8px 0 14px}
+.card{background:rgba(17,24,39,.9);border:1.5px solid var(--border-color);border-radius:14px;padding:16px;margin-bottom:14px}
+.card .title{font-size:1.08rem;font-weight:700;color:var(--accent-cyan);margin-bottom:6px}
+.card .row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:.95rem}
+.card .row span:first-child{color:var(--text-muted)}
+.card .actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;background:#334155}
+.tag.awaiting{background:#92400e}.tag.active{background:#065f46}.tag.ready{background:#1d4ed8}.tag.paid{background:#475569}.tag.cancelled,.tag.withdraw_requested{background:#7c2d12}
+.empty{text-align:center;color:var(--text-muted);padding:22px 8px}
+.note{color:var(--text-muted);font-size:.85rem;text-align:center;margin:10px 0 18px;line-height:1.4}
+.raffle-wheel-box{border:1px solid var(--border-color);border-radius:12px;padding:18px;text-align:center}
+.wheel-container{position:relative;width:230px;height:230px;margin:18px auto;border-radius:50%;border:8px solid var(--accent-yellow);overflow:hidden;box-shadow:0 0 30px rgba(250,204,21,.4)}
+.wheel-pointer{width:0;height:0;margin:0 auto -14px;border-left:16px solid transparent;border-right:16px solid transparent;border-top:24px solid var(--accent-red);position:relative;z-index:5}
+.wheel-disc{width:100%;height:100%;border-radius:50%;background:conic-gradient(#ef4444 0 60deg,#facc15 60deg 120deg,#10b981 120deg 180deg,#38bdf8 180deg 240deg,#8b5cf6 240deg 300deg,#ec4899 300deg 360deg);transition:transform 5s cubic-bezier(.25,.1,.25,1)}
+.btn-spin{background:linear-gradient(90deg,var(--accent-yellow),#eab308);color:#000;font-weight:800;border:none;padding:13px 38px;border-radius:30px;font-size:1.15rem;cursor:pointer;margin-top:10px}
+.chat-box{height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px 2px}
+.bubble{max-width:82%;padding:9px 13px;border-radius:14px;background:#1e293b;font-size:.98rem;align-self:flex-start;word-wrap:break-word}
+.bubble.me{background:#1d4ed8;align-self:flex-end}
+.bubble small{display:block;color:#93c5fd;font-size:.74rem;margin-bottom:2px}
+.chat-send{display:flex;gap:8px;margin-top:10px}
+.chat-send input{flex:1}
+.my-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.my-user-title{color:var(--accent-cyan);font-size:1.1rem;font-weight:bold}
+.my-user-phone{margin-top:4px;display:flex;gap:8px;align-items:center}
+.my-user-badge{background:rgba(255,255,255,.1);padding:2px 8px;border-radius:10px;font-size:.75rem;color:var(--text-muted)}
+.my-avatar-ring{width:52px;height:52px;border-radius:50%;border:2px solid var(--accent-cyan);display:flex;justify-content:center;align-items:center;font-size:1.3rem;color:var(--accent-cyan)}
+.my-wallet-card{background:rgba(17,24,39,.9);border:1px solid var(--accent-cyan);border-radius:16px;padding:18px;margin-bottom:18px}
+.my-wallet-grid{display:flex;justify-content:space-around;text-align:center}
+.my-wallet-label{font-size:.85rem;display:block;margin-bottom:5px}
+.my-wallet-val{font-size:1.35rem;font-weight:bold}
+.my-menu-box{background:rgba(17,24,39,.9);border:1px solid var(--accent-cyan);border-radius:16px;padding:18px 8px;margin-bottom:18px}
+.my-menu-grid{display:grid;grid-template-columns:repeat(4,1fr);row-gap:18px;text-align:center}
+.my-menu-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+.my-icon-btn{width:48px;height:48px;background:#1d4ed8;border-radius:12px;display:flex;justify-content:center;align-items:center;font-size:1.2rem}
+.my-menu-label{font-size:.78rem}
+.navbar{position:fixed;bottom:0;left:0;width:100%;background:#0a0f1c;border-top:3px solid #1e40af;display:flex;justify-content:space-around;padding:6px 0;z-index:100}
+.nav-item{display:flex;flex-direction:column;align-items:center;font-size:.72rem;cursor:pointer;padding:5px 8px;color:#fff}
+.nav-item i{font-size:1.3rem;margin-bottom:3px}
+.nav-item.active,.nav-item.active i{color:var(--accent-cyan)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;padding:18px}
+.modal.open{display:flex}
+.modal-box{background:#0f172a;border:1.5px solid var(--accent-cyan);border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal-box h3{margin-bottom:12px;color:var(--accent-cyan)}
+.modal-box label{display:block;margin:10px 0 5px;color:var(--text-muted);font-size:.9rem}
+.sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
+</style>
+</head>
+<body>
+<canvas id="waveCanvas"></canvas>
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginPage" class="view-page active"><div class="auth-container">
+  <h1 class="auth-title">AJX Savings Hub</h1>
+  <div class="auth-subtitle">Save together. Get back exactly what you saved.</div>
+  <form id="loginForm">
+    <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="lPhone" class="input-field" placeholder="Phone Number" required></div>
+    <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="lPass" class="input-field" placeholder="Password" required><i class="fa-solid fa-eye-slash right-icon" data-eye="lPass"></i></div>
+    <div class="err" id="lErr"></div>
+    <button type="submit" class="btn-submit">Login</button>
+    <div class="auth-footer"><a data-go="registerPage"><i class="fa-solid fa-angle-left"></i> Register</a><a id="forgot">Forgot your password?</a></div>
+  </form>
+</div></div>
+
+<!-- REGISTER -->
+<div id="registerPage" class="view-page"><div class="auth-container">
+  <h1 class="auth-title">Join the group</h1>
+  <div class="auth-subtitle">An administrator approves every member</div>
+  <form id="regForm">
+    <div class="input-group"><i class="fa-solid fa-user left-icon"></i><input type="text" id="rName" class="input-field" placeholder="Full name" required></div>
+    <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="rPhone" class="input-field" placeholder="Phone Number" required></div>
+    <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="rPass" class="input-field" placeholder="Set Password (6+ characters)" required></div>
+    <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="rPass2" class="input-field" placeholder="Confirm Password" required></div>
+    <div class="err" id="rErr"></div>
+    <button type="submit" class="btn-submit">Register</button>
+    <div class="auth-footer" style="justify-content:flex-start"><a data-go="loginPage"><i class="fa-solid fa-angle-left"></i> Login</a></div>
+  </form>
+</div></div>
+
+<!-- PENDING -->
+<div id="pendingPage" class="view-page"><div class="auth-container">
+  <h1 class="auth-title" style="font-size:1.8rem">Waiting for approval</h1>
+  <div class="auth-subtitle">Your registration was received. An administrator must approve you before you can use the group.</div>
+  <button class="btn-submit" id="recheck">Check again</button>
+  <button class="btn-submit" style="background:#334155;box-shadow:none" data-signout>Sign out</button>
+</div></div>
+
+<!-- DASHBOARD -->
+<div id="dashContainer" class="view-page">
+
+  <div id="tabHome" class="tab-content">
+    <div class="dash-header"><div class="dash-brand">AJX Savings</div><div class="dash-msg-btn" data-tab="tabNotices"><i class="fa-regular fa-bell"></i><span>Notices</span></div></div>
+    <div class="hero-banner"><p>Your savings are held by the group. <b>You get back exactly what you deposit</b> on the release date you chose. No profit is promised.</p></div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-val" id="hSaved">0</div><div class="stat-label">Locked savings</div></div>
+      <div class="stat-card"><div class="stat-val" id="hReady">0</div><div class="stat-label">Ready to withdraw</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-val" id="hAwait">0</div><div class="stat-label">Awaiting confirmation</div></div>
+      <div class="stat-card"><div class="stat-val" id="hPaid">0</div><div class="stat-label">Withdrawn so far</div></div>
+    </div>
+    <div class="grid-3">
+      <div class="stat-card"><div class="stat-val" id="hPlans">0</div><div class="stat-label">My plans</div></div>
+      <div class="stat-card"><div class="stat-val" id="hNext" style="font-size:.95rem">-</div><div class="stat-label">Next release</div></div>
+      <div class="stat-card"><div class="stat-val" id="hMembers">0</div><div class="stat-label">Members</div></div>
+    </div>
+    <div class="message-panel"><div class="message-header"><span class="message-title">Notices</span><span class="msg-more" data-tab="tabNotices" style="color:#67e8f9;text-decoration:underline;cursor:pointer;font-size:.9rem">More</span></div><div id="homeNotices"></div></div>
+  </div>
+
+  <div id="tabNotices" class="tab-content" style="display:none"><h2 class="t">Notices</h2><div id="noticeList"></div></div>
+
+  <div id="tabRaffle" class="tab-content" style="display:none">
+    <h2 class="t">Group Lucky Draw</h2>
+    <div class="raffle-wheel-box">
+      <p style="color:var(--accent-cyan)">Fun draws run by the admin. Nothing is paid to enter.</p>
+      <div class="wheel-container-wrap"><div class="wheel-pointer"></div><div class="wheel-container"><div class="wheel-disc" id="wheelDisc"></div></div></div>
+      <div id="drawAdmin" style="display:none"><input class="input-field plain" id="drawPrize" placeholder="Prize (e.g. airtime, a gift)" style="margin-bottom:8px"><button class="btn-spin" id="spinBtn">DRAW A WINNER</button></div>
+      <p id="raffleResult" style="margin-top:14px;font-weight:bold;color:var(--accent-yellow)"></p>
+    </div>
+    <div class="sec">Past draws</div><div id="drawList"></div>
+  </div>
+
+  <div id="tabChats" class="tab-content" style="display:none">
+    <h2 class="t">Group chat</h2>
+    <div class="chat-box" id="chatBox"></div>
+    <form class="chat-send" id="chatForm"><input class="input-field plain" id="chatText" placeholder="Write a message" autocomplete="off"><button class="btn-small" style="padding:0 18px"><i class="fa-solid fa-paper-plane"></i></button></form>
+  </div>
+
+  <div id="tabPlans" class="tab-content" style="display:none">
+    <h2 class="t">Savings plans</h2>
+    <p class="note">Pick a plan, choose how much you will save, then pay the group treasurer. Your plan starts when the admin confirms your payment.</p>
+    <div id="planList"></div>
+  </div>
+
+  <div id="tabRecords" class="tab-content" style="display:none"><h2 class="t">My records</h2><div id="recordList"></div></div>
+
+  <div id="tabMy" class="tab-content" style="display:none">
+    <div class="my-header-row"><div><div class="my-user-title" id="myName">-</div><div class="my-user-phone"><span id="myPhone"></span><span class="my-user-badge" id="myRole">Member</span></div></div><div class="my-avatar-ring"><i class="fa-solid fa-sun"></i></div></div>
+    <div class="my-wallet-card"><div class="my-wallet-grid"><div><span class="my-wallet-label">Locked</span><span class="my-wallet-val" id="mLocked">0</span></div><div><span class="my-wallet-label">Ready</span><span class="my-wallet-val" id="mReady">0</span></div></div></div>
+    <div class="my-menu-box"><div class="my-menu-grid">
+      <div class="my-menu-item" data-tab="tabPlans"><div class="my-icon-btn"><i class="fa-solid fa-wallet"></i></div><span class="my-menu-label">Deposit</span></div>
+      <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-hand-holding-dollar"></i></div><span class="my-menu-label">Withdraw</span></div>
+      <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-credit-card"></i></div><span class="my-menu-label">Bill</span></div>
+      <div class="my-menu-item" data-tab="tabNotices"><div class="my-icon-btn"><i class="fa-regular fa-bell"></i></div><span class="my-menu-label">Notices</span></div>
+      <div class="my-menu-item" data-tab="tabChats"><div class="my-icon-btn"><i class="fa-solid fa-users"></i></div><span class="my-menu-label">Group</span></div>
+      <div class="my-menu-item" data-tab="tabRaffle"><div class="my-icon-btn"><i class="fa-solid fa-dharmachakra"></i></div><span class="my-menu-label">Draw</span></div>
+      <div class="my-menu-item" id="supportBtn"><div class="my-icon-btn"><i class="fa-solid fa-headset"></i></div><span class="my-menu-label">Admin</span></div>
+      <div class="my-menu-item" data-signout><div class="my-icon-btn"><i class="fa-solid fa-right-from-bracket"></i></div><span class="my-menu-label">Sign out</span></div>
+      <div class="my-menu-item adminOnly" data-tab="tabAdmin" style="display:none"><div class="my-icon-btn" style="background:#b45309"><i class="fa-solid fa-user-shield"></i></div><span class="my-menu-label">Admin panel</span></div>
+    </div></div>
+  </div>
+
+  <div id="tabAdmin" class="tab-content" style="display:none">
+    <h2 class="t">Admin panel</h2>
+    <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aHeld">0</div><div class="stat-label">Held by group</div></div><div class="stat-card"><div class="stat-val" id="aOwed">0</div><div class="stat-label">Withdrawals due</div></div></div>
+    <div class="sec">Members waiting for approval</div><div id="aPending"></div>
+    <div class="sec">Deposits to confirm (money received?)</div><div id="aDeposits"></div>
+    <div class="sec">Withdrawals to pay out</div><div id="aWithdraws"></div>
+    <div class="sec">Plans</div><div id="aPlans"></div><button class="btn-small" id="addPlanBtn">+ Add plan</button>
+    <div class="sec">Post a notice</div><textarea id="noticeText" class="input-field plain" rows="3" placeholder="Write a notice for all members"></textarea><button class="btn-small" id="postNotice" style="margin-top:8px">Post notice</button>
+    <div class="sec">All members</div><div id="aMembers"></div>
+    <p class="note">Rule: confirm a deposit only after the money has really reached the group (cash or mobile money). Pay a withdrawal only on or after its release date.</p>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item active" data-tab="tabHome"><i class="fa-solid fa-database"></i><span>Home</span></div>
+    <div class="nav-item" data-tab="tabRaffle"><i class="fa-solid fa-border-all"></i><span>Draw</span></div>
+    <div class="nav-item" data-tab="tabChats"><i class="fa-regular fa-comments"></i><span>Chats</span></div>
+    <div class="nav-item" data-tab="tabPlans"><i class="fa-solid fa-piggy-bank"></i><span>Plans</span></div>
+    <div class="nav-item" data-tab="tabRecords"><i class="fa-solid fa-clock-rotate-left"></i><span>Records</span></div>
+    <div class="nav-item" data-tab="tabMy"><i class="fa-regular fa-user"></i><span>My</span></div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// ====== PASTE YOUR NEW FIREBASE PROJECT CONFIG HERE ======
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "PASTE_SENDER_ID",
+  appId: "PASTE_APP_ID"
+};
+const CURRENCY = "UGX";
+const MAIL_DOMAIN = "@ajx-savings.app";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => CURRENCY + " " + Math.round(Number(n) || 0).toLocaleString("en-US");
+const ms = t => (t && t.toMillis) ? t.toMillis() : (t ? +new Date(t) : 0);
+const dt = t => ms(t) ? new Date(ms(t)).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "-";
+const dd = t => ms(t) ? new Date(ms(t)).toLocaleDateString([], { dateStyle: "medium" }) : "-";
+const normPhone = p => { let d = String(p).replace(/\D/g, ""); if (d.length === 10 && d[0] === "0") d = "256" + d.slice(1); return d; };
+const mailOf = p => normPhone(p) + MAIL_DOMAIN;
+const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
+
+let me = null, myUid = null, isAdmin = false;
+let mySavings = [], allSavings = [], plans = [], users = [], notices = [], messages = [], draws = [];
+let unsubs = [];
+
+// ---------- view helpers ----------
+function show(id) { document.querySelectorAll(".view-page").forEach(p => p.classList.remove("active")); $(id).classList.add("active"); }
+function openTab(id) {
+  document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
+  $(id).style.display = "block";
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.tab === id || (n.dataset.tab === "tabMy" && id === "tabAdmin")));
+  window.scrollTo(0, 0);
+  if (id === "tabChats") scrollChat();
+}
+function modal(html) { $("modalBox").innerHTML = html; $("modal").classList.add("open"); }
+function closeModal() { $("modal").classList.remove("open"); }
+$("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-tab],[data-go],[data-eye],[data-signout],[data-act]");
+  if (!t) return;
+  if (t.dataset.tab) return openTab(t.dataset.tab);
+  if (t.dataset.go) return show(t.dataset.go);
+  if (t.dataset.eye) { const f = $(t.dataset.eye); f.type = f.type === "password" ? "text" : "password"; return; }
+  if (t.hasAttribute("data-signout")) { await signOut(auth); return; }
+  if (t.dataset.act) await action(t.dataset.act, t.dataset.id, t);
+});
+
+// ---------- auth ----------
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault(); $("lErr").textContent = "";
+  try { await signInWithEmailAndPassword(auth, mailOf($("lPhone").value), $("lPass").value); }
+  catch (err) { $("lErr").textContent = authMsg(err); }
+});
+$("regForm").addEventListener("submit", async e => {
+  e.preventDefault(); $("rErr").textContent = "";
+  const name = $("rName").value.trim(), phone = normPhone($("rPhone").value), p1 = $("rPass").value;
+  if (phone.length < 9) return $("rErr").textContent = "Enter a valid phone number.";
+  if (p1 !== $("rPass2").value) return $("rErr").textContent = "Passwords do not match.";
+  try {
+    let cred;
+    try { cred = await createUserWithEmailAndPassword(auth, mailOf(phone), p1); }
+    catch (err) {
+      if (err.code === "auth/email-already-in-use") cred = await signInWithEmailAndPassword(auth, mailOf(phone), p1);
+      else throw err;
+    }
+    await setDoc(doc(db, "users", cred.user.uid), { name, phone, role: "member", status: "pending", createdAt: serverTimestamp() }, { merge: false }).catch(() => { });
+  } catch (err) { $("rErr").textContent = authMsg(err); }
+});
+$("forgot").addEventListener("click", () => alert("Please contact the group administrator. They will reset your account so you can register again."));
+$("recheck").addEventListener("click", () => location.reload());
+
+onAuthStateChanged(auth, user => {
+  unsubs.forEach(u => u()); unsubs = []; me = null; myUid = null; isAdmin = false;
+  if (!user) return show("loginPage");
+  myUid = user.uid;
+  unsubs.push(onSnapshot(doc(db, "users", user.uid), snap => {
+    if (!snap.exists()) { show("pendingPage"); return; }
+    me = { id: snap.id, ...snap.data() };
+    isAdmin = me.role === "admin" && me.status === "approved";
+    if (me.status !== "approved") return show("pendingPage");
+    startApp();
+  }, () => show("pendingPage")));
+});
+
+let started = false;
+function startApp() {
+  if (started) { renderAll(); return; }
+  started = true;
+  show("dashContainer"); openTab("tabHome");
+  document.querySelectorAll(".adminOnly").forEach(x => x.style.display = isAdmin ? "" : "none");
+  $("drawAdmin").style.display = isAdmin ? "block" : "none";
+  const savQ = isAdmin ? collection(db, "savings") : query(collection(db, "savings"), where("uid", "==", myUid));
+  unsubs.push(onSnapshot(savQ, s => { const a = s.docs.map(d => ({ id: d.id, ...d.data() })); if (isAdmin) allSavings = a; mySavings = isAdmin ? a.filter(x => x.uid === myUid) : a; renderAll(); }));
+  unsubs.push(onSnapshot(collection(db, "plans"), s => { plans = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+  unsubs.push(onSnapshot(collection(db, "notices"), s => { notices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }));
+  unsubs.push(onSnapshot(query(collection(db, "messages"), orderBy("at", "desc"), limit(100)), s => { messages = s.docs.map(d => ({ id: d.id, ...d.data() })).reverse(); renderChat(); }));
+  unsubs.push(onSnapshot(collection(db, "draws"), s => { draws = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderDraws(); }));
+  if (isAdmin) unsubs.push(onSnapshot(collection(db, "users"), s => { users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+}
+onAuthStateChanged(auth, u => { if (!u) started = false; });
+
+// ---------- helpers on savings ----------
+const isReady = s => s.status === "active" && ms(s.releaseAt) && ms(s.releaseAt) <= Date.now();
+const sum = (arr, f) => arr.filter(f).reduce((a, s) => a + (Number(s.amount) || 0), 0);
+function stateOf(s) { return isReady(s) ? "ready" : s.status; }
+function stateText(s) { return ({ awaiting: "Awaiting confirmation", active: "Locked", ready: "Ready to withdraw", withdraw_requested: "Withdrawal requested", paid: "Paid out", cancelled: "Cancelled" })[stateOf(s)] || s.status; }
+
+// ---------- render ----------
+function renderAll() {
+  if (!me) return;
+  $("hSaved").textContent = fmt(sum(mySavings, s => (s.status === "active" && !isReady(s)) || s.status === "withdraw_requested"));
+  $("hReady").textContent = fmt(sum(mySavings, isReady));
+  $("hAwait").textContent = fmt(sum(mySavings, s => s.status === "awaiting"));
+  $("hPaid").textContent = fmt(sum(mySavings, s => s.status === "paid"));
+  $("hPlans").textContent = mySavings.filter(s => ["active", "awaiting", "withdraw_requested"].includes(s.status)).length;
+  const nxt = mySavings.filter(s => s.status === "active" && !isReady(s)).map(s => ms(s.releaseAt)).sort((a, b) => a - b)[0];
+  $("hNext").textContent = nxt ? dd(nxt) : "-";
+  $("hMembers").textContent = isAdmin ? users.filter(u => u.status === "approved").length : "-";
+  $("mLocked").textContent = $("hSaved").textContent; $("mReady").textContent = $("hReady").textContent;
+  $("myName").textContent = me.name; $("myPhone").textContent = "+" + me.phone; $("myRole").textContent = isAdmin ? "Admin" : "Member";
+  const nl = n => `<div class="msg-item">${esc(n.text)}<small>${dt(n.at)}</small></div>`;
+  $("homeNotices").innerHTML = notices.slice(0, 3).map(nl).join("") || `<div class="empty">No notices yet</div>`;
+  $("noticeList").innerHTML = notices.map(n => `<div class="card">${esc(n.text)}<div class="row" style="margin-top:6px"><span>${dt(n.at)}</span>${isAdmin ? `<span><a style="color:#fca5a5;cursor:pointer" data-act="delNotice" data-id="${n.id}">Delete</a></span>` : ""}</div></div>`).join("") || `<div class="empty">No notices yet</div>`;
+  renderPlans(); renderRecords(); if (isAdmin) renderAdmin();
+}
+function renderPlans() {
+  const act = plans.filter(p => p.active !== false);
+  $("planList").innerHTML = act.map(p => `<div class="card"><div class="title">${esc(p.name)}</div>
+    <div class="row"><span>Lock period</span><span>${p.lockDays} days</span></div>
+    <div class="row"><span>Minimum deposit</span><span>${fmt(p.minAmount)}</span></div>
+    <div class="row"><span>You get back</span><span>Exactly what you deposited</span></div>
+    <div class="actions"><button class="btn-small" data-act="startPlan" data-id="${p.id}">Start this plan</button></div></div>`).join("") || `<div class="empty">The admin has not added any plans yet.</div>`;
+}
+function renderRecords() {
+  const list = [...mySavings].sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+  $("recordList").innerHTML = list.map(s => {
+    const st = stateOf(s);
+    let btns = "";
+    if (s.status === "awaiting") btns = `<button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Cancel</button>`;
+    if (st === "ready") btns = `<button class="btn-small green" data-act="reqWithdraw" data-id="${s.id}">Request withdrawal</button>`;
+    return `<div class="card"><div class="title">${esc(s.planName)} <span class="tag ${st}">${stateText(s)}</span></div>
+      <div class="row"><span>Amount</span><span>${fmt(s.amount)}</span></div>
+      <div class="row"><span>Lock</span><span>${s.lockDays} days</span></div>
+      <div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div>
+      ${s.status === "awaiting" ? `<div class="row"><span>Next step</span><span>Pay the treasurer, then wait for confirmation</span></div>` : ""}
+      ${ms(s.releaseAt) ? `<div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div>` : ""}
+      ${s.status === "paid" ? `<div class="row"><span>Paid out</span><span>${dt(s.paidAt)}</span></div>` : ""}
+      ${btns ? `<div class="actions">${btns}</div>` : ""}</div>`;
+  }).join("") || `<div class="empty">No savings yet. Open Plans to start.</div>`;
+}
+function renderAdmin() {
+  const held = sum(allSavings, s => s.status === "active" || s.status === "withdraw_requested");
+  const owed = sum(allSavings, s => s.status === "withdraw_requested");
+  $("aHeld").textContent = fmt(held); $("aOwed").textContent = fmt(owed);
+  $("aPending").innerHTML = users.filter(u => u.status === "pending").map(u => `<div class="card"><div class="title">${esc(u.name)}</div><div class="row"><span>Phone</span><span>+${esc(u.phone)}</span></div><div class="actions"><button class="btn-small green" data-act="approveUser" data-id="${u.id}">Approve</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aPlans").innerHTML = plans.map(p => `<div class="card"><div class="title">${esc(p.name)} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Turn off" : "Turn on"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
+  $("aMembers").innerHTML = users.filter(u => u.status === "approved").map(u => `<div class="card"><div class="row"><span><b style="color:#fff">${esc(u.name)}</b> ${u.role === "admin" ? '<span class="tag active">Admin</span>' : ""}</span><span>+${esc(u.phone)}</span></div>${u.id !== myUid ? `<div class="actions"><button class="btn-small grey" data-act="toggleAdmin" data-id="${u.id}">${u.role === "admin" ? "Remove admin" : "Make admin"}</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div>` : ""}</div>`).join("");
+}
+function renderChat() {
+  $("chatBox").innerHTML = messages.map(m => `<div class="bubble ${m.uid === myUid ? "me" : ""}"><small>${esc(m.name)}</small>${esc(m.text)}</div>`).join("") || `<div class="empty">Say hello to the group</div>`;
+  scrollChat();
+}
+function scrollChat() { const b = $("chatBox"); if (b) b.scrollTop = b.scrollHeight; }
+function renderDraws() {
+  $("drawList").innerHTML = draws.map(d => `<div class="card"><div class="title">🎉 ${esc(d.winnerName)}</div><div class="row"><span>Prize</span><span>${esc(d.prize || "-")}</span></div><div class="row"><span>Date</span><span>${dt(d.at)}</span></div></div>`).join("") || `<div class="empty">No draws yet</div>`;
+}
+
+// ---------- actions ----------
+async function action(act, id, el) {
+  try {
+    if (act === "startPlan") {
+      const p = plans.find(x => x.id === id); if (!p) return;
+      modal(`<h3>${esc(p.name)}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. After you pay the treasurer, the admin confirms and your ${p.lockDays} days begin. On the release date you can withdraw exactly what you saved.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Request this plan</button>`);
+      $("mGo").onclick = async () => {
+        const a = Math.floor(Number($("mAmt").value));
+        if (!a || a < Number(p.minAmount)) return $("mErr").textContent = "Minimum is " + fmt(p.minAmount);
+        $("mGo").disabled = true;
+        await addDoc(collection(db, "savings"), { uid: myUid, name: me.name, phone: me.phone, planId: p.id, planName: p.name, amount: a, lockDays: Number(p.lockDays), status: "awaiting", createdAt: serverTimestamp() });
+        closeModal(); openTab("tabRecords");
+      };
+    }
+    else if (act === "cancelSav") { if (confirm("Cancel this request?")) await updateDoc(doc(db, "savings", id), { status: "cancelled" }); }
+    else if (act === "reqWithdraw") { if (confirm("Request your withdrawal now?")) await updateDoc(doc(db, "savings", id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() }); }
+    else if (act === "confirmDep") {
+      const s = allSavings.find(x => x.id === id);
+      if (confirm(`Confirm that ${fmt(s.amount)} was received from ${s.name}?`))
+        await updateDoc(doc(db, "savings", id), { status: "active", activatedAt: serverTimestamp(), releaseAt: Timestamp.fromDate(new Date(Date.now() + s.lockDays * 86400000)), confirmedBy: myUid });
+    }
+    else if (act === "markPaid") { if (confirm("Confirm you have paid this member?")) await updateDoc(doc(db, "savings", id), { status: "paid", paidAt: serverTimestamp(), paidBy: myUid }); }
+    else if (act === "approveUser") await updateDoc(doc(db, "users", id), { status: "approved" });
+    else if (act === "rejectUser") { if (confirm("Remove this member from the group?")) await deleteDoc(doc(db, "users", id)); }
+    else if (act === "toggleAdmin") { const u = users.find(x => x.id === id); await updateDoc(doc(db, "users", id), { role: u.role === "admin" ? "member" : "admin" }); }
+    else if (act === "togglePlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { active: p.active === false }); }
+    else if (act === "delPlan") { if (confirm("Delete this plan? Existing savings are not affected.")) await deleteDoc(doc(db, "plans", id)); }
+    else if (act === "delNotice") await deleteDoc(doc(db, "notices", id));
+  } catch (err) { alert("Could not do that: " + err.message); }
+}
+$("addPlanBtn").addEventListener("click", () => {
+  modal(`<h3>Add a savings plan</h3><label>Plan name</label><input id="pN" class="input-field plain" placeholder="e.g. 30-Day Lock"><label>Lock period (days)</label><input id="pD" type="number" class="input-field plain" placeholder="30"><label>Minimum deposit (${CURRENCY})</label><input id="pM" type="number" class="input-field plain" placeholder="50000"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save plan</button>`);
+  $("mGo").onclick = async () => {
+    const name = $("pN").value.trim(), d = Math.floor(Number($("pD").value)), m = Math.floor(Number($("pM").value));
+    if (!name || !d || d < 1 || !m || m < 1) return $("mErr").textContent = "Fill in all fields.";
+    await addDoc(collection(db, "plans"), { name, lockDays: d, minAmount: m, active: true, createdAt: serverTimestamp() });
+    closeModal();
+  };
+});
+$("postNotice").addEventListener("click", async () => {
+  const t = $("noticeText").value.trim(); if (!t) return;
+  await addDoc(collection(db, "notices"), { text: t, at: serverTimestamp(), by: myUid }); $("noticeText").value = "";
+});
+$("chatForm").addEventListener("submit", async e => {
+  e.preventDefault(); const t = $("chatText").value.trim(); if (!t) return; $("chatText").value = "";
+  await addDoc(collection(db, "messages"), { uid: myUid, name: me.name, text: t.slice(0, 500), at: serverTimestamp() });
+});
+$("supportBtn").addEventListener("click", () => { openTab("tabChats"); $("chatText").focus(); });
+
+// lucky draw (admin): real random pick among approved members, saved for everyone to see
+let rot = 0;
+$("spinBtn").addEventListener("click", async () => {
+  const pool = users.filter(u => u.status === "approved");
+  if (!pool.length) return alert("No members to draw from.");
+  const winner = pool[Math.floor(Math.random() * pool.length)];
+  rot += 1440 + Math.floor(Math.random() * 360);
+  $("wheelDisc").style.transform = `rotate(${rot}deg)`;
+  $("raffleResult").textContent = "Drawing...";
+  $("spinBtn").disabled = true;
+  setTimeout(async () => {
+    $("raffleResult").textContent = "🎉 Winner: " + winner.name;
+    await addDoc(collection(db, "draws"), { winnerName: winner.name, winnerUid: winner.id, prize: $("drawPrize").value.trim(), at: serverTimestamp(), by: myUid });
+    $("spinBtn").disabled = false;
+  }, 5200);
+});
+
+// release dates pass while the app is open
+setInterval(() => { if (me) renderAll(); }, 60000);
+
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => { }));
+
+// wave background
+const canvas = $("waveCanvas"), ctx = canvas.getContext("2d");
+let W = canvas.width = innerWidth, H = canvas.height = innerHeight;
+addEventListener("resize", () => { W = canvas.width = innerWidth; H = canvas.height = innerHeight; });
+let count = 0;
+(function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const cols = 32, rows = 35, SEP = 28;
+  for (let ix = 0; ix < cols; ix++) for (let iy = 0; iy < rows; iy++) {
+    const x = (ix - cols / 2) * SEP, y = (iy - rows / 2) * SEP;
+    const z = Math.sin((ix + count) * .2) * 18 + Math.sin((iy + count) * .2) * 18;
+    const p = 300 / (300 + y + 300), px = W / 2 + x * p, py = H / 1.35 + (z - y * .5) * p;
+    if (py > 0 && py < H) { ctx.beginPath(); ctx.arc(px, py, Math.max(.5, 2 * p), 0, 6.283); ctx.fillStyle = `rgba(56,189,248,${Math.min(.6, p * .9)})`; ctx.fill(); }
+  }
+  count += .04; requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
