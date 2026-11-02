@@ -92,6 +92,12 @@ h2.t{text-align:center;margin:8px 0 14px}
 .modal-box{background:#0f172a;border:1.5px solid var(--accent-cyan);border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
 .modal-box h3{margin-bottom:12px;color:var(--accent-cyan)}
 .modal-box label{display:block;margin:10px 0 5px;color:var(--text-muted);font-size:.9rem}
+.series-bar{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;margin-bottom:6px;-webkit-overflow-scrolling:touch}.series-bar::-webkit-scrollbar{display:none}.series-chip{flex:0 0 auto;padding:8px 16px;border-radius:20px;border:1px solid #334155;background:transparent;color:#94a3b8;font-size:.95rem;font-weight:700;cursor:pointer;white-space:nowrap}.series-chip.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.dep-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}.dep-back{width:40px;height:40px;border-radius:50%;background:#0f172a;border:1px solid #1e293b;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.dep-hero{background:linear-gradient(135deg,#1d4ed8,#0e7490);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(29,78,216,.25)}.dep-hero small{display:block;color:#bfdbfe;font-size:.85rem}.dep-hero b{display:block;color:#fff;font-size:1.7rem;margin:2px 0 12px}.dep-hero .two{display:flex;gap:10px}.dep-hero .two div{flex:1;background:rgba(2,6,23,.28);border-radius:12px;padding:10px}.dep-hero .two b{font-size:1.05rem;margin:0}
+.dep-steps{display:flex;gap:8px;margin-bottom:6px}.dep-step{flex:1;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:12px 8px;text-align:center;font-size:.8rem;color:#94a3b8}.dep-step i{display:flex;width:32px;height:32px;margin:0 auto 6px;border-radius:50%;background:#1e3a8a;color:#93c5fd;align-items:center;justify-content:center}
+.dep-card{background:#0b1220;border:1px solid #1e293b;border-radius:16px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:center}.dep-ico{width:46px;height:46px;border-radius:13px;background:#1e3a8a;color:#93c5fd;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:0 0 auto}.dep-info{flex:1;min-width:0}.dep-info .n{color:#fff;font-weight:700;font-size:1.02rem}.dep-info .m{color:#94a3b8;font-size:.85rem;margin-top:3px}.dep-card .btn-small{flex:0 0 auto}
+.bal-card{background:linear-gradient(135deg,#1d4ed8,#0e7490);border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(29,78,216,.25)}.bal-card small{display:block;color:#bfdbfe;font-size:.85rem}.bal-total{color:#fff;font-size:2rem;font-weight:800;margin:2px 0 12px}.bal-row{display:flex;gap:8px;margin-bottom:14px}.bal-row div{flex:1;background:rgba(2,6,23,.28);border-radius:12px;padding:8px 10px}.bal-row b{display:block;color:#fff;font-size:.98rem}.bal-btns{display:flex;gap:10px}.bal-btns button{flex:1;padding:12px;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer}.bal-dep{background:#fff;color:#1d4ed8}.bal-wd{background:#065f46;color:#fff}
 .sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
 </style>
 </head>
@@ -106,7 +112,7 @@ h2.t{text-align:center;margin:8px 0 14px}
   <form id="loginForm">
     <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="lPhone" class="input-field" placeholder="Phone Number" required></div>
     <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="lPass" class="input-field" placeholder="Password" required><i class="fa-solid fa-eye-slash right-icon" data-eye="lPass"></i></div>
-    <div class="err" id="lErr"></div>
+    <div id="lMsg" style="color:#6ee7b7;font-size:.98rem;margin-bottom:10px;line-height:1.35"></div><div class="err" id="lErr"></div>
     <button type="submit" class="btn-submit">Login</button>
     <div class="auth-footer"><a data-go="registerPage"><i class="fa-solid fa-angle-left"></i> Register</a><a id="forgot">Forgot your password?</a></div>
   </form>
@@ -117,7 +123,7 @@ h2.t{text-align:center;margin:8px 0 14px}
   <h1 class="auth-title">Join the group</h1>
   <div class="auth-subtitle">An administrator approves every member</div>
   <form id="regForm">
-    <div class="input-group"><i class="fa-solid fa-user left-icon"></i><input type="text" id="rName" class="input-field" placeholder="Full name" required></div>
+    <div class="input-group"><i class="fa-solid fa-user left-icon"></i><input type="text" id="rName" class="input-field" placeholder="Full name (at least two names)" required></div>
     <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="rPhone" class="input-field" placeholder="Phone Number" required></div>
     <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="rPass" class="input-field" placeholder="Set Password (6+ characters)" required></div>
     <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="rPass2" class="input-field" placeholder="Confirm Password" required></div>
@@ -131,7 +137,7 @@ h2.t{text-align:center;margin:8px 0 14px}
 <div id="pendingPage" class="view-page"><div class="auth-container">
   <h1 class="auth-title" style="font-size:1.8rem">Waiting for approval</h1>
   <div class="auth-subtitle">Your registration was received. An administrator must approve you before you can use the group.</div>
-  <button class="btn-submit" id="recheck">Check again</button>
+  <div class="err" id="pErr" style="color:#fcd34d"></div><button class="btn-submit" id="recheck">Check again</button>
   <button class="btn-submit" style="background:#334155;box-shadow:none" data-signout>Sign out</button>
 </div></div>
 
@@ -140,6 +146,9 @@ h2.t{text-align:center;margin:8px 0 14px}
 
   <div id="tabHome" class="tab-content">
     <div class="dash-header"><div class="dash-brand">AJX Savings</div><div class="dash-msg-btn" data-tab="tabNotices"><i class="fa-regular fa-bell"></i><span>Notices</span></div></div>
+    <div class="bal-card"><small>Total savings with the group</small><div class="bal-total" id="bTotal">0</div>
+      <div class="bal-row"><div><small>Locked</small><b id="bLocked">0</b></div><div><small>Ready</small><b id="bReady">0</b></div><div><small>Payout pending</small><b id="bPend">0</b></div></div>
+      <div class="bal-btns"><button class="bal-dep" data-tab="tabDeposit"><i class="fa-solid fa-plus"></i> Deposit</button><button class="bal-wd" data-act="withdrawAll"><i class="fa-solid fa-hand-holding-dollar"></i> Withdraw</button></div></div>
     <div class="hero-banner"><p>Your savings are held by the group. <b>You get back exactly what you deposit</b> on the release date you chose. No profit is promised.</p></div>
     <div class="grid-2">
       <div class="stat-card"><div class="stat-val" id="hSaved">0</div><div class="stat-label">Locked savings</div></div>
@@ -178,8 +187,20 @@ h2.t{text-align:center;margin:8px 0 14px}
 
   <div id="tabPlans" class="tab-content" style="display:none">
     <h2 class="t">Savings plans</h2>
+    <div class="series-bar" id="seriesBar"></div>
     <p class="note">Pick a plan, choose how much you will save, then pay the group treasurer. Your plan starts when the admin confirms your payment.</p>
     <div id="planList"></div>
+  </div>
+
+  <div id="tabDeposit" class="tab-content" style="display:none">
+    <div class="dep-top"><div class="dep-back" data-tab="tabMy"><i class="fa-solid fa-arrow-left"></i></div><h2 class="t" style="margin:0">Deposit</h2></div>
+    <div class="dep-hero"><small>Locked savings</small><b id="dLocked">0</b><div class="two"><div><small>Waiting for admin</small><b id="dAwait">0</b></div><div><small>Ready to withdraw</small><b id="dReady">0</b></div></div></div>
+    <div class="dep-steps"><div class="dep-step"><i class="fa-solid fa-list-check"></i>1. Choose a plan</div><div class="dep-step"><i class="fa-solid fa-hand-holding-dollar"></i>2. Pay the treasurer</div><div class="dep-step"><i class="fa-solid fa-circle-check"></i>3. Admin confirms</div></div>
+    <div class="sec">Choose a plan</div>
+    <div class="series-bar" id="depBar"></div>
+    <div id="depList"></div>
+    <div class="sec">Waiting for confirmation</div>
+    <div id="depAwait"></div>
   </div>
 
   <div id="tabRecords" class="tab-content" style="display:none"><h2 class="t">My records</h2><div id="recordList"></div></div>
@@ -188,7 +209,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="my-header-row"><div><div class="my-user-title" id="myName">-</div><div class="my-user-phone"><span id="myPhone"></span><span class="my-user-badge" id="myRole">Member</span></div></div><div class="my-avatar-ring"><i class="fa-solid fa-sun"></i></div></div>
     <div class="my-wallet-card"><div class="my-wallet-grid"><div><span class="my-wallet-label">Locked</span><span class="my-wallet-val" id="mLocked">0</span></div><div><span class="my-wallet-label">Ready</span><span class="my-wallet-val" id="mReady">0</span></div></div></div>
     <div class="my-menu-box"><div class="my-menu-grid">
-      <div class="my-menu-item" data-tab="tabPlans"><div class="my-icon-btn"><i class="fa-solid fa-wallet"></i></div><span class="my-menu-label">Deposit</span></div>
+      <div class="my-menu-item" data-tab="tabDeposit"><div class="my-icon-btn"><i class="fa-solid fa-wallet"></i></div><span class="my-menu-label">Deposit</span></div>
       <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-hand-holding-dollar"></i></div><span class="my-menu-label">Withdraw</span></div>
       <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-credit-card"></i></div><span class="my-menu-label">Bill</span></div>
       <div class="my-menu-item" data-tab="tabNotices"><div class="my-icon-btn"><i class="fa-regular fa-bell"></i></div><span class="my-menu-label">Notices</span></div>
@@ -205,6 +226,7 @@ h2.t{text-align:center;margin:8px 0 14px}
   <div id="tabAdmin" class="tab-content" style="display:none">
     <h2 class="t">Admin panel</h2>
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aHeld">0</div><div class="stat-label">Held by group</div></div><div class="stat-card"><div class="stat-val" id="aOwed">0</div><div class="stat-label">Withdrawals due</div></div></div>
+    <div class="sec">Password reset requests</div><div id="aResets"></div>
     <div class="sec">Members waiting for approval</div><div id="aPending"></div>
     <div class="sec">Deposits to confirm (money received?)</div><div id="aDeposits"></div>
     <div class="sec">Withdrawals to pay out</div><div id="aWithdraws"></div>
@@ -230,8 +252,9 @@ h2.t{text-align:center;margin:8px 0 14px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeAuth, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ====== PASTE YOUR NEW FIREBASE PROJECT CONFIG HERE ======
 const firebaseConfig = {
@@ -246,8 +269,11 @@ const CURRENCY = "UGX";
 const MAIL_DOMAIN = "@ajx-savings.app";
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const auth = initializeAuth(app, { persistence: inMemoryPersistence }); // nobody is auto-logged in when the link is opened
 const db = getFirestore(app);
+// Mobile money: set to true AFTER you deploy the functions folder (see DEPLOY-PAYMENTS.md)
+const PAYMENTS_ON = false;
+const fns = getFunctions(app, "us-central1");
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = n => CURRENCY + " " + Math.round(Number(n) || 0).toLocaleString("en-US");
@@ -259,7 +285,7 @@ const mailOf = p => normPhone(p) + MAIL_DOMAIN;
 const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
 
 let me = null, myUid = null, isAdmin = false;
-let mySavings = [], allSavings = [], plans = [], users = [], notices = [], messages = [], draws = [];
+let resets = [], mySavings = [], allSavings = [], plans = [], users = [], notices = [], messages = [], draws = [];
 let unsubs = [];
 
 // ---------- view helpers ----------
@@ -287,29 +313,62 @@ document.addEventListener("click", async e => {
 
 // ---------- auth ----------
 $("loginForm").addEventListener("submit", async e => {
-  e.preventDefault(); $("lErr").textContent = "";
+  e.preventDefault(); $("lErr").textContent = ""; $("lMsg").textContent = "";
   try { await signInWithEmailAndPassword(auth, mailOf($("lPhone").value), $("lPass").value); }
   catch (err) { $("lErr").textContent = authMsg(err); }
 });
+let registering = false;
 $("regForm").addEventListener("submit", async e => {
   e.preventDefault(); $("rErr").textContent = "";
-  const name = $("rName").value.trim(), phone = normPhone($("rPhone").value), p1 = $("rPass").value;
+  const name = $("rName").value.trim().replace(/\s+/g, " "), phone = normPhone($("rPhone").value), p1 = $("rPass").value;
+  if (name.split(" ").length < 2 || name.split(" ").some(w => w.length < 2)) return $("rErr").textContent = "Enter your full name: at least two names (e.g. Dickson Mukasa).";
   if (phone.length < 9) return $("rErr").textContent = "Enter a valid phone number.";
+  if (p1.length < 6) return $("rErr").textContent = "Password must be at least 6 characters.";
   if (p1 !== $("rPass2").value) return $("rErr").textContent = "Passwords do not match.";
+  registering = true;
   try {
     let cred;
     try { cred = await createUserWithEmailAndPassword(auth, mailOf(phone), p1); }
     catch (err) {
-      if (err.code === "auth/email-already-in-use") cred = await signInWithEmailAndPassword(auth, mailOf(phone), p1);
-      else throw err;
+      if (err.code === "auth/email-already-in-use") {
+        try { cred = await signInWithEmailAndPassword(auth, mailOf(phone), p1); }
+        catch (e2) { throw { code: "x", message: "This phone number is already registered. Go to Login, or use Forgot password." }; }
+      } else throw err;
     }
-    await setDoc(doc(db, "users", cred.user.uid), { name, phone, role: "member", status: "pending", createdAt: serverTimestamp() }, { merge: false }).catch(() => { });
-  } catch (err) { $("rErr").textContent = authMsg(err); }
+    const ref = doc(db, "users", cred.user.uid);
+    const ex = await getDoc(ref).catch(() => null);
+    if (ex && ex.exists()) { await signOut(auth); registering = false; show("loginPage"); $("lPhone").value = phone; $("lErr").textContent = "This phone number is already registered. Please log in."; return; }
+    await setDoc(ref, { name, phone, role: "member", status: "pending", createdAt: serverTimestamp() });
+    await signOut(auth);
+    registering = false;
+    $("regForm").reset();
+    show("loginPage");
+    $("lPhone").value = phone; $("lPass").value = "";
+    $("lMsg").textContent = "Registration received. Now confirm your phone number and enter your password to log in. An administrator must approve you before you can use the group.";
+  } catch (err) { registering = false; try { await signOut(auth); } catch (x) { } $("rErr").textContent = authMsg(err); }
 });
-$("forgot").addEventListener("click", () => alert("Please contact the group administrator. They will reset your account so you can register again."));
-$("recheck").addEventListener("click", () => location.reload());
+$("forgot").addEventListener("click", () => {
+  modal(`<h3>Forgot your password?</h3><p class="note" style="text-align:left;font-size:.98rem">Send a request to the group administrator. When the admin has reset your login, come back, tap <b>Register</b>, and use the <b>same phone number</b> with a new password. After the admin approves you again, all your savings are still there.</p><label>Full name</label><input id="fName" class="input-field plain" placeholder="Your full name"><label>Phone number</label><input id="fPhone" type="tel" class="input-field plain" placeholder="07..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Send request</button>`);
+  $("fPhone").value = $("lPhone").value;
+  $("mGo").onclick = async () => {
+    const name = $("fName").value.trim(), phone = normPhone($("fPhone").value);
+    if (!name || phone.length < 9) return $("mErr").textContent = "Enter your name and phone number.";
+    $("mGo").disabled = true;
+    try {
+      await addDoc(collection(db, "resetRequests"), { name: name.slice(0, 70), phone, at: serverTimestamp() });
+      $("modalBox").innerHTML = `<h3>Request sent</h3><p class="note" style="text-align:left;font-size:1rem">The administrator will reset your login. You can also tell the admin in person or by phone. Then register again with the same phone number and a new password.</p><button class="btn-submit" id="mGo2">OK</button>`;
+      $("mGo2").onclick = closeModal;
+    } catch (err) { $("mGo").disabled = false; $("mErr").textContent = "Could not send. Check your internet and try again."; }
+  };
+});
+$("recheck").addEventListener("click", async () => {
+  $("pErr").textContent = "";
+  try { const d = await getDoc(doc(db, "users", myUid)); if (!d.exists() || d.data().status !== "approved") $("pErr").textContent = "Not approved yet. Please try again later."; }
+  catch (e) { $("pErr").textContent = "Could not check. Try again."; }
+});
 
 onAuthStateChanged(auth, user => {
+  if (registering) return;
   unsubs.forEach(u => u()); unsubs = []; me = null; myUid = null; isAdmin = false;
   if (!user) return show("loginPage");
   myUid = user.uid;
@@ -329,12 +388,13 @@ function startApp() {
   show("dashContainer"); openTab("tabHome");
   document.querySelectorAll(".adminOnly").forEach(x => x.style.display = isAdmin ? "" : "none");
   $("drawAdmin").style.display = isAdmin ? "block" : "none";
-  const savQ = isAdmin ? collection(db, "savings") : query(collection(db, "savings"), where("uid", "==", myUid));
-  unsubs.push(onSnapshot(savQ, s => { const a = s.docs.map(d => ({ id: d.id, ...d.data() })); if (isAdmin) allSavings = a; mySavings = isAdmin ? a.filter(x => x.uid === myUid) : a; renderAll(); }));
+  const savQ = isAdmin ? collection(db, "savings") : query(collection(db, "savings"), where("phone", "==", me.phone));
+  unsubs.push(onSnapshot(savQ, s => { const a = s.docs.map(d => ({ id: d.id, ...d.data() })); if (isAdmin) allSavings = a; mySavings = isAdmin ? a.filter(x => x.phone === me.phone) : a; renderAll(); }));
   unsubs.push(onSnapshot(collection(db, "plans"), s => { plans = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
   unsubs.push(onSnapshot(collection(db, "notices"), s => { notices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }));
   unsubs.push(onSnapshot(query(collection(db, "messages"), orderBy("at", "desc"), limit(100)), s => { messages = s.docs.map(d => ({ id: d.id, ...d.data() })).reverse(); renderChat(); }));
   unsubs.push(onSnapshot(collection(db, "draws"), s => { draws = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderDraws(); }));
+  if (isAdmin) unsubs.push(onSnapshot(collection(db, "resetRequests"), s => { resets = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }));
   if (isAdmin) unsubs.push(onSnapshot(collection(db, "users"), s => { users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
 }
 onAuthStateChanged(auth, u => { if (!u) started = false; });
@@ -348,7 +408,9 @@ function stateText(s) { return ({ awaiting: "Awaiting confirmation", active: "Lo
 // ---------- render ----------
 function renderAll() {
   if (!me) return;
-  $("hSaved").textContent = fmt(sum(mySavings, s => (s.status === "active" && !isReady(s)) || s.status === "withdraw_requested"));
+  $("hSaved").textContent = fmt(sum(mySavings, s => s.status === "active" && !isReady(s)));
+  const bL = sum(mySavings, s => s.status === "active" && !isReady(s)), bR = sum(mySavings, isReady), bP = sum(mySavings, s => s.status === "withdraw_requested");
+  $("bLocked").textContent = fmt(bL); $("bReady").textContent = fmt(bR); $("bPend").textContent = fmt(bP); $("bTotal").textContent = fmt(bL + bR + bP);
   $("hReady").textContent = fmt(sum(mySavings, isReady));
   $("hAwait").textContent = fmt(sum(mySavings, s => s.status === "awaiting"));
   $("hPaid").textContent = fmt(sum(mySavings, s => s.status === "paid"));
@@ -363,13 +425,30 @@ function renderAll() {
   $("noticeList").innerHTML = notices.map(n => `<div class="card">${esc(n.text)}<div class="row" style="margin-top:6px"><span>${dt(n.at)}</span>${isAdmin ? `<span><a style="color:#fca5a5;cursor:pointer" data-act="delNotice" data-id="${n.id}">Delete</a></span>` : ""}</div></div>`).join("") || `<div class="empty">No notices yet</div>`;
   renderPlans(); renderRecords(); if (isAdmin) renderAdmin();
 }
+const SERIES = ["All", "A-series", "B-series", "C-series", "D-series"];
+let seriesFilter = "All";
 function renderPlans() {
-  const act = plans.filter(p => p.active !== false);
-  $("planList").innerHTML = act.map(p => `<div class="card"><div class="title">${esc(p.name)}</div>
+  renderDeposit();
+  $("seriesBar").innerHTML = SERIES.map(x => `<button class="series-chip ${x === seriesFilter ? "on" : ""}" data-series="${x}">${x}</button>`).join("");
+  const act = plans.filter(p => p.active !== false && (seriesFilter === "All" || p.series === seriesFilter));
+  $("planList").innerHTML = act.map(p => `<div class="card"><div class="title">${esc(p.name)}${p.series ? ` <span class="tag">${esc(p.series)}</span>` : ""}</div>
     <div class="row"><span>Lock period</span><span>${p.lockDays} days</span></div>
     <div class="row"><span>Minimum deposit</span><span>${fmt(p.minAmount)}</span></div>
     <div class="row"><span>You get back</span><span>Exactly what you deposited</span></div>
-    <div class="actions"><button class="btn-small" data-act="startPlan" data-id="${p.id}">Start this plan</button></div></div>`).join("") || `<div class="empty">The admin has not added any plans yet.</div>`;
+    <div class="actions"><button class="btn-small" data-act="startPlan" data-id="${p.id}">Start this plan</button></div></div>`).join("") || `<div class="empty">${seriesFilter === "All" ? "The admin has not added any plans yet." : "No plans in " + seriesFilter + " yet."}</div>`;
+}
+function onSeries(e) { const b = e.target.closest("[data-series]"); if (!b) return; seriesFilter = b.dataset.series; renderPlans(); }
+$("seriesBar").addEventListener("click", onSeries);
+$("depBar").addEventListener("click", onSeries);
+function renderDeposit() {
+  const chips = SERIES.map(x => `<button class="series-chip ${x === seriesFilter ? "on" : ""}" data-series="${x}">${x}</button>`).join("");
+  $("depBar").innerHTML = chips;
+  const list = plans.filter(p => p.active !== false && (seriesFilter === "All" || p.series === seriesFilter));
+  $("depList").innerHTML = list.map(p => `<div class="dep-card"><div class="dep-ico"><i class="fa-solid fa-piggy-bank"></i></div><div class="dep-info"><div class="n">${esc(p.name)} ${p.series ? `<span class="tag">${esc(p.series)}</span>` : ""}</div><div class="m">Lock ${p.lockDays} days &middot; Min ${fmt(p.minAmount)}</div></div><button class="btn-small" data-act="startPlan" data-id="${p.id}">Deposit</button></div>`).join("") || `<div class="empty">${seriesFilter === "All" ? "The admin has not added any plans yet." : "No plans in " + seriesFilter + " yet."}</div>`;
+  const aw = mySavings.filter(x => x.status === "awaiting");
+  $("dLocked").textContent = $("hSaved").textContent; $("dReady").textContent = $("hReady").textContent;
+  $("dAwait").textContent = fmt(aw.reduce((t, x) => t + Number(x.amount || 0), 0));
+  $("depAwait").innerHTML = aw.map(x => `<div class="dep-card"><div class="dep-ico" style="background:#78350f;color:#fcd34d"><i class="fa-solid fa-hourglass-half"></i></div><div class="dep-info"><div class="n">${fmt(x.amount)}</div><div class="m">${esc(x.planName)} &middot; pay the treasurer, then wait</div></div><button class="btn-small red" data-act="cancelSav" data-id="${x.id}">Cancel</button></div>`).join("") || `<div class="empty">Nothing waiting</div>`;
 }
 function renderRecords() {
   const list = [...mySavings].sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
@@ -392,10 +471,11 @@ function renderAdmin() {
   const held = sum(allSavings, s => s.status === "active" || s.status === "withdraw_requested");
   const owed = sum(allSavings, s => s.status === "withdraw_requested");
   $("aHeld").textContent = fmt(held); $("aOwed").textContent = fmt(owed);
+  $("aResets").innerHTML = resets.map(r => `<div class="card"><div class="title">${esc(r.name)}</div><div class="row"><span>Phone</span><span>+${esc(r.phone)}</span></div><div class="row"><span>Asked</span><span>${dt(r.at)}</span></div><div class="note" style="text-align:left;margin:8px 0">1. In Firebase open Authentication, then Users. 2. Find <b style="color:#fff">${esc(r.phone)}@ajx-savings.app</b>. 3. Tap the three dots, then Delete account. 4. Tap Done here and tell the member to register again with the same phone.</div><div class="actions"><button class="btn-small green" data-act="doneReset" data-id="${r.id}">Done</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aPending").innerHTML = users.filter(u => u.status === "pending").map(u => `<div class="card"><div class="title">${esc(u.name)}</div><div class="row"><span>Phone</span><span>+${esc(u.phone)}</span></div><div class="actions"><button class="btn-small green" data-act="approveUser" data-id="${u.id}">Approve</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div></div>`).join("") || `<div class="empty">None</div>`;
-  $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div>${s.provider ? `<div class="row"><span>Pays with</span><span>${esc(s.provider)} +${esc(s.payerPhone || "")}</span></div>` : ""}<div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
-  $("aPlans").innerHTML = plans.map(p => `<div class="card"><div class="title">${esc(p.name)} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Turn off" : "Turn on"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
+  $("aPlans").innerHTML = plans.map(p => `<div class="card"><div class="title">${esc(p.name)} ${p.series ? `<span class="tag">${esc(p.series)}</span>` : ""} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Turn off" : "Turn on"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
   $("aMembers").innerHTML = users.filter(u => u.status === "approved").map(u => `<div class="card"><div class="row"><span><b style="color:#fff">${esc(u.name)}</b> ${u.role === "admin" ? '<span class="tag active">Admin</span>' : ""}</span><span>+${esc(u.phone)}</span></div>${u.id !== myUid ? `<div class="actions"><button class="btn-small grey" data-act="toggleAdmin" data-id="${u.id}">${u.role === "admin" ? "Remove admin" : "Make admin"}</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div>` : ""}</div>`).join("");
 }
 function renderChat() {
@@ -412,16 +492,43 @@ async function action(act, id, el) {
   try {
     if (act === "startPlan") {
       const p = plans.find(x => x.id === id); if (!p) return;
-      modal(`<h3>${esc(p.name)}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. After you pay the treasurer, the admin confirms and your ${p.lockDays} days begin. On the release date you can withdraw exactly what you saved.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Request this plan</button>`);
+      modal(`<h3>${esc(p.name)} ${p.series ? `<span class="tag">${esc(p.series)}</span>` : ""}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. ${PAYMENTS_ON ? "You will get a prompt on your phone to approve the payment with your mobile money PIN." : "After you pay the treasurer, the admin confirms."} Your ${p.lockDays} days begin once the money is confirmed. On the release date you can withdraw exactly what you saved.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><label>Pay with</label><div class="series-bar" id="provBar"><button type="button" class="series-chip on" data-prov="MTN">MTN MoMo</button><button type="button" class="series-chip" data-prov="AIRTEL">Airtel Money</button></div><label>Mobile money number</label><input id="mPhone" type="tel" inputmode="numeric" class="input-field plain" value="${esc(me.phone)}" placeholder="2567..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${PAYMENTS_ON ? "Pay now" : "Request this plan"}</button>`);
+      let prov = "MTN";
+      $("provBar").onclick = e => { const b = e.target.closest("[data-prov]"); if (!b) return; prov = b.dataset.prov; document.querySelectorAll("#provBar .series-chip").forEach(c => c.classList.toggle("on", c === b)); };
       $("mGo").onclick = async () => {
         const a = Math.floor(Number($("mAmt").value));
         if (!a || a < Number(p.minAmount)) return $("mErr").textContent = "Minimum is " + fmt(p.minAmount);
         $("mGo").disabled = true;
-        await addDoc(collection(db, "savings"), { uid: myUid, name: me.name, phone: me.phone, planId: p.id, planName: p.name, amount: a, lockDays: Number(p.lockDays), status: "awaiting", createdAt: serverTimestamp() });
-        closeModal(); openTab("tabRecords");
+        let pay = String($("mPhone").value).replace(/\D/g, "");
+        if (pay.startsWith("0")) pay = "256" + pay.slice(1);
+        if (!/^256\d{9}$/.test(pay)) { $("mGo").disabled = false; return $("mErr").textContent = "Enter a valid number, e.g. 0772123456"; }
+        const rec = { uid: myUid, name: me.name, phone: me.phone, planId: p.id, planName: p.name, amount: a, lockDays: Number(p.lockDays), status: "awaiting", provider: prov, payerPhone: pay, createdAt: serverTimestamp() };
+        if (p.series) rec.series = p.series;
+        const ref = await addDoc(collection(db, "savings"), rec);
+        if (!PAYMENTS_ON) { closeModal(); return openTab("tabRecords"); }
+        try {
+          $("mGo").textContent = "Sending request...";
+          const r = await httpsCallable(fns, "startPayment")({ savingId: ref.id });
+          const url = r.data && r.data.redirect;
+          modal(`<h3>Approve the payment</h3><p class="note" style="text-align:left">A request for <b>${fmt(a)}</b> was sent to <b>+${pay}</b> (${prov === "MTN" ? "MTN MoMo" : "Airtel Money"}). ${url ? "Tap the button below to approve it, then enter your PIN." : "Check your phone and enter your PIN to approve."} Your plan starts automatically once the money is received.</p>${url ? `<a class="btn-submit" style="display:block;text-align:center;text-decoration:none" href="${esc(url)}" target="_blank" rel="noopener">Open approval page</a>` : ""}<button class="btn-small grey" id="mGo2" style="width:100%;margin-top:10px;padding:12px">Done</button>`);
+          $("mGo2").onclick = () => { closeModal(); openTab("tabRecords"); };
+        } catch (err) {
+          modal(`<h3>Payment not started</h3><p class="note" style="text-align:left">${esc(err.message || "Try again.")} Your request is saved under Records, and you can cancel it there or pay the treasurer instead.</p><button class="btn-submit" id="mGo2">OK</button>`);
+          $("mGo2").onclick = () => { closeModal(); openTab("tabRecords"); };
+        }
       };
     }
     else if (act === "cancelSav") { if (confirm("Cancel this request?")) await updateDoc(doc(db, "savings", id), { status: "cancelled" }); }
+    else if (act === "withdrawAll") {
+      const rd = mySavings.filter(isReady);
+      if (!rd.length) {
+        const nxt = mySavings.filter(x => x.status === "active").map(x => ms(x.releaseAt)).sort((a, b) => a - b)[0];
+        return modal(`<h3>Nothing to withdraw yet</h3><p class="note" style="text-align:left">Your savings can only be withdrawn on their release date.${nxt ? " Your next release is <b>" + dd(nxt) + "</b>." : ""}</p><button class="btn-submit" id="mGo">OK</button>`), $("mGo").onclick = closeModal;
+      }
+      const tot = rd.reduce((t, x) => t + Number(x.amount || 0), 0);
+      if (confirm(`Request withdrawal of ${fmt(tot)}? The admin will pay you out.`))
+        for (const x of rd) await updateDoc(doc(db, "savings", x.id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() });
+    }
     else if (act === "reqWithdraw") { if (confirm("Request your withdrawal now?")) await updateDoc(doc(db, "savings", id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() }); }
     else if (act === "confirmDep") {
       const s = allSavings.find(x => x.id === id);
@@ -429,7 +536,12 @@ async function action(act, id, el) {
         await updateDoc(doc(db, "savings", id), { status: "active", activatedAt: serverTimestamp(), releaseAt: Timestamp.fromDate(new Date(Date.now() + s.lockDays * 86400000)), confirmedBy: myUid });
     }
     else if (act === "markPaid") { if (confirm("Confirm you have paid this member?")) await updateDoc(doc(db, "savings", id), { status: "paid", paidAt: serverTimestamp(), paidBy: myUid }); }
-    else if (act === "approveUser") await updateDoc(doc(db, "users", id), { status: "approved" });
+    else if (act === "approveUser") {
+      const u = users.find(x => x.id === id);
+      await updateDoc(doc(db, "users", id), { status: "approved" });
+      for (const o of users.filter(x => x.phone === u.phone && x.id !== id)) await deleteDoc(doc(db, "users", o.id)); // old record left after a password reset
+    }
+    else if (act === "doneReset") await deleteDoc(doc(db, "resetRequests", id));
     else if (act === "rejectUser") { if (confirm("Remove this member from the group?")) await deleteDoc(doc(db, "users", id)); }
     else if (act === "toggleAdmin") { const u = users.find(x => x.id === id); await updateDoc(doc(db, "users", id), { role: u.role === "admin" ? "member" : "admin" }); }
     else if (act === "togglePlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { active: p.active === false }); }
@@ -438,11 +550,11 @@ async function action(act, id, el) {
   } catch (err) { alert("Could not do that: " + err.message); }
 }
 $("addPlanBtn").addEventListener("click", () => {
-  modal(`<h3>Add a savings plan</h3><label>Plan name</label><input id="pN" class="input-field plain" placeholder="e.g. 30-Day Lock"><label>Lock period (days)</label><input id="pD" type="number" class="input-field plain" placeholder="30"><label>Minimum deposit (${CURRENCY})</label><input id="pM" type="number" class="input-field plain" placeholder="50000"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save plan</button>`);
+  modal(`<h3>Add a savings plan</h3><label>Plan name</label><input id="pN" class="input-field plain" placeholder="e.g. 30-Day Lock"><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Lock period (days)</label><input id="pD" type="number" class="input-field plain" placeholder="30"><label>Minimum deposit (${CURRENCY})</label><input id="pM" type="number" class="input-field plain" placeholder="50000"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save plan</button>`);
   $("mGo").onclick = async () => {
     const name = $("pN").value.trim(), d = Math.floor(Number($("pD").value)), m = Math.floor(Number($("pM").value));
     if (!name || !d || d < 1 || !m || m < 1) return $("mErr").textContent = "Fill in all fields.";
-    await addDoc(collection(db, "plans"), { name, lockDays: d, minAmount: m, active: true, createdAt: serverTimestamp() });
+    await addDoc(collection(db, "plans"), { name, series: $("pS").value, lockDays: d, minAmount: m, active: true, createdAt: serverTimestamp() });
     closeModal();
   };
 });
