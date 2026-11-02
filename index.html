@@ -160,14 +160,14 @@ h2.t{text-align:center;margin:8px 0 14px}
   <div id="tabNotices" class="tab-content" style="display:none"><h2 class="t">Notices</h2><div id="noticeList"></div></div>
 
   <div id="tabRaffle" class="tab-content" style="display:none">
-    <h2 class="t">Group Lucky Draw</h2>
+    <h2 class="t">Group Raffle</h2>
     <div class="raffle-wheel-box">
-      <p style="color:var(--accent-cyan)">Fun draws run by the admin. Nothing is paid to enter.</p>
+      <p style="color:var(--accent-cyan)">Fun raffles run by the admin. Nothing is paid to enter.</p>
       <div class="wheel-container-wrap"><div class="wheel-pointer"></div><div class="wheel-container"><div class="wheel-disc" id="wheelDisc"></div></div></div>
-      <div id="drawAdmin" style="display:none"><input class="input-field plain" id="drawPrize" placeholder="Prize (e.g. airtime, a gift)" style="margin-bottom:8px"><button class="btn-spin" id="spinBtn">DRAW A WINNER</button></div>
+      <div id="drawAdmin" style="display:none"><input class="input-field plain" id="drawPrize" placeholder="Prize (e.g. airtime, a gift)" style="margin-bottom:8px"><button class="btn-spin" id="spinBtn">SPIN THE RAFFLE</button></div>
       <p id="raffleResult" style="margin-top:14px;font-weight:bold;color:var(--accent-yellow)"></p>
     </div>
-    <div class="sec">Past draws</div><div id="drawList"></div>
+    <div class="sec">Past raffles</div><div id="drawList"></div>
   </div>
 
   <div id="tabChats" class="tab-content" style="display:none">
@@ -193,7 +193,9 @@ h2.t{text-align:center;margin:8px 0 14px}
       <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-credit-card"></i></div><span class="my-menu-label">Bill</span></div>
       <div class="my-menu-item" data-tab="tabNotices"><div class="my-icon-btn"><i class="fa-regular fa-bell"></i></div><span class="my-menu-label">Notices</span></div>
       <div class="my-menu-item" data-tab="tabChats"><div class="my-icon-btn"><i class="fa-solid fa-users"></i></div><span class="my-menu-label">Group</span></div>
-      <div class="my-menu-item" data-tab="tabRaffle"><div class="my-icon-btn"><i class="fa-solid fa-dharmachakra"></i></div><span class="my-menu-label">Draw</span></div>
+      <div class="my-menu-item" data-tab="tabRaffle"><div class="my-icon-btn"><i class="fa-solid fa-dharmachakra"></i></div><span class="my-menu-label">Raffle</span></div>
+      <div class="my-menu-item" id="shareBtn"><div class="my-icon-btn"><i class="fa-solid fa-share-nodes"></i></div><span class="my-menu-label">Share</span></div>
+      <div class="my-menu-item" id="installBtn"><div class="my-icon-btn"><i class="fa-solid fa-download"></i></div><span class="my-menu-label">Download App</span></div>
       <div class="my-menu-item" id="supportBtn"><div class="my-icon-btn"><i class="fa-solid fa-headset"></i></div><span class="my-menu-label">Admin</span></div>
       <div class="my-menu-item" data-signout><div class="my-icon-btn"><i class="fa-solid fa-right-from-bracket"></i></div><span class="my-menu-label">Sign out</span></div>
       <div class="my-menu-item adminOnly" data-tab="tabAdmin" style="display:none"><div class="my-icon-btn" style="background:#b45309"><i class="fa-solid fa-user-shield"></i></div><span class="my-menu-label">Admin panel</span></div>
@@ -214,7 +216,7 @@ h2.t{text-align:center;margin:8px 0 14px}
 
   <div class="navbar">
     <div class="nav-item active" data-tab="tabHome"><i class="fa-solid fa-database"></i><span>Home</span></div>
-    <div class="nav-item" data-tab="tabRaffle"><i class="fa-solid fa-border-all"></i><span>Draw</span></div>
+    <div class="nav-item" data-tab="tabRaffle"><i class="fa-solid fa-border-all"></i><span>Raffle</span></div>
     <div class="nav-item" data-tab="tabChats"><i class="fa-regular fa-comments"></i><span>Chats</span></div>
     <div class="nav-item" data-tab="tabPlans"><i class="fa-solid fa-piggy-bank"></i><span>Plans</span></div>
     <div class="nav-item" data-tab="tabRecords"><i class="fa-solid fa-clock-rotate-left"></i><span>Records</span></div>
@@ -402,7 +404,7 @@ function renderChat() {
 }
 function scrollChat() { const b = $("chatBox"); if (b) b.scrollTop = b.scrollHeight; }
 function renderDraws() {
-  $("drawList").innerHTML = draws.map(d => `<div class="card"><div class="title">🎉 ${esc(d.winnerName)}</div><div class="row"><span>Prize</span><span>${esc(d.prize || "-")}</span></div><div class="row"><span>Date</span><span>${dt(d.at)}</span></div></div>`).join("") || `<div class="empty">No draws yet</div>`;
+  $("drawList").innerHTML = draws.map(d => `<div class="card"><div class="title">🎉 ${esc(d.winnerName)}</div><div class="row"><span>Prize</span><span>${esc(d.prize || "-")}</span></div><div class="row"><span>Date</span><span>${dt(d.at)}</span></div></div>`).join("") || `<div class="empty">No raffles yet</div>`;
 }
 
 // ---------- actions ----------
@@ -458,17 +460,42 @@ $("supportBtn").addEventListener("click", () => { openTab("tabChats"); $("chatTe
 let rot = 0;
 $("spinBtn").addEventListener("click", async () => {
   const pool = users.filter(u => u.status === "approved");
-  if (!pool.length) return alert("No members to draw from.");
+  if (!pool.length) return alert("No members in the raffle.");
   const winner = pool[Math.floor(Math.random() * pool.length)];
   rot += 1440 + Math.floor(Math.random() * 360);
   $("wheelDisc").style.transform = `rotate(${rot}deg)`;
-  $("raffleResult").textContent = "Drawing...";
+  $("raffleResult").textContent = "Spinning...";
   $("spinBtn").disabled = true;
   setTimeout(async () => {
     $("raffleResult").textContent = "🎉 Winner: " + winner.name;
     await addDoc(collection(db, "draws"), { winnerName: winner.name, winnerUid: winner.id, prize: $("drawPrize").value.trim(), at: serverTimestamp(), by: myUid });
     $("spinBtn").disabled = false;
   }, 5200);
+});
+
+// share the app link
+$("shareBtn").addEventListener("click", async () => {
+  const url = location.origin + location.pathname;
+  const data = { title: "AJX Savings Hub", text: "Join our savings group on AJX Savings Hub:", url };
+  try {
+    if (navigator.share) { await navigator.share(data); return; }
+    await navigator.clipboard.writeText(url);
+    alert("Link copied. Paste it in WhatsApp or SMS to share:\n" + url);
+  } catch (err) {
+    if (err && err.name === "AbortError") return;
+    prompt("Copy this link and share it:", url);
+  }
+});
+
+// install the app on the phone
+let installEvt = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; });
+addEventListener("appinstalled", () => { installEvt = null; });
+$("installBtn").addEventListener("click", async () => {
+  if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) return alert("The app is already installed on this phone.");
+  if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) { } installEvt = null; return; }
+  modal(`<h3>Install the app</h3><p class="note" style="text-align:left;font-size:1rem">1. Open this page in <b>Chrome</b>.<br>2. Tap the <b>three dots</b> at the top right.<br>3. Tap <b>Add to Home screen</b> (or <b>Install app</b>).<br>4. Tap <b>Add</b>. The app will appear with your other apps.</p><button class="btn-submit" id="mGo">OK</button>`);
+  $("mGo").onclick = closeModal;
 });
 
 // release dates pass while the app is open
