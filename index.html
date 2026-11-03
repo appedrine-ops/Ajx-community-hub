@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#030712">
 <link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <title>AJX Savings Hub</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <style>
@@ -115,7 +118,8 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="lPhone" class="input-field" placeholder="Phone Number" required></div>
     <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="lPass" class="input-field" placeholder="Password" required><i class="fa-solid fa-eye-slash right-icon" data-eye="lPass"></i></div>
     <div id="lMsg" style="color:#6ee7b7;font-size:.98rem;margin-bottom:10px;line-height:1.35"></div><div class="err" id="lErr"></div>
-    <button type="submit" class="btn-submit">Login</button>
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#94a3b8;font-size:.9rem"><input type="checkbox" id="lKeep" checked style="width:18px;height:18px"> Keep me signed in on this phone</label>
+    <button type="submit" class="btn-submit" id="lBtn">Login</button>
     <div class="auth-footer"><a data-go="registerPage"><i class="fa-solid fa-angle-left"></i> Register</a><a id="forgot">Forgot your password?</a></div>
   </form>
 </div></div>
@@ -225,7 +229,15 @@ h2.t{text-align:center;margin:8px 0 14px}
       <div class="my-menu-item" id="supportBtn"><div class="my-icon-btn"><i class="fa-solid fa-headset"></i></div><span class="my-menu-label">Admin</span></div>
       <div class="my-menu-item" data-signout><div class="my-icon-btn"><i class="fa-solid fa-right-from-bracket"></i></div><span class="my-menu-label">Sign out</span></div>
       <div class="my-menu-item adminOnly" data-tab="tabAdmin" style="display:none"><div class="my-icon-btn" style="background:#b45309"><i class="fa-solid fa-user-shield"></i></div><span class="my-menu-label">Admin panel</span></div>
+      <div class="my-menu-item adminOnly" data-tab="tabMachines" style="display:none"><div class="my-icon-btn" style="background:#b45309"><i class="fa-solid fa-gears"></i></div><span class="my-menu-label">Machines</span></div>
     </div></div>
+  </div>
+
+  <div id="tabMachines" class="tab-content" style="display:none">
+    <div class="dep-top"><div class="dep-back" data-tab="tabMy"><i class="fa-solid fa-arrow-left"></i></div><h2 class="t" style="margin:0">Machines</h2></div>
+    <p class="note" style="text-align:left">Add a machine with its photo, price and number of days. Members see it on the Deposit screen. Lock stops deposits, Hide removes it from members, Edit changes the price or days.</p>
+    <button class="btn-submit" id="mAddBtn" style="margin-bottom:14px"><i class="fa-solid fa-plus"></i> Add machine</button>
+    <div id="mList"></div>
   </div>
 
   <div id="tabAdmin" class="tab-content" style="display:none">
@@ -257,9 +269,9 @@ h2.t{text-align:center;margin:8px 0 14px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { initializeAuth, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { initializeAuth, inMemoryPersistence, browserLocalPersistence, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
-import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, getDoc, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ====== PASTE YOUR NEW FIREBASE PROJECT CONFIG HERE ======
 const firebaseConfig = {
@@ -274,8 +286,10 @@ const CURRENCY = "UGX";
 const MAIL_DOMAIN = "@ajx-savings.app";
 
 const app = initializeApp(firebaseConfig);
-const auth = initializeAuth(app, { persistence: inMemoryPersistence }); // nobody is auto-logged in when the link is opened
-const db = getFirestore(app);
+const auth = initializeAuth(app, { persistence: browserLocalPersistence }); // stays signed in only if "Keep me signed in" was ticked
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); } // saved copy on the phone = faster opening
+catch (e) { db = getFirestore(app); }
 // Mobile money: set to true AFTER you deploy the functions folder (see DEPLOY-PAYMENTS.md)
 const PAYMENTS_ON = false;
 const fns = getFunctions(app, "us-central1");
@@ -298,7 +312,7 @@ function show(id) { document.querySelectorAll(".view-page").forEach(p => p.class
 function openTab(id) {
   document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
   $(id).style.display = "block";
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.tab === id || (n.dataset.tab === "tabMy" && id === "tabAdmin")));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.tab === id || (n.dataset.tab === "tabMy" && (id === "tabAdmin" || id === "tabMachines"))));
   window.scrollTo(0, 0);
   if (id === "tabChats") scrollChat();
 }
@@ -319,8 +333,13 @@ document.addEventListener("click", async e => {
 // ---------- auth ----------
 $("loginForm").addEventListener("submit", async e => {
   e.preventDefault(); $("lErr").textContent = ""; $("lMsg").textContent = "";
-  try { await signInWithEmailAndPassword(auth, mailOf($("lPhone").value), $("lPass").value); }
+  const btn = $("lBtn"); btn.disabled = true; btn.textContent = "Signing in...";
+  try {
+    await setPersistence(auth, $("lKeep").checked ? browserLocalPersistence : inMemoryPersistence);
+    await signInWithEmailAndPassword(auth, mailOf($("lPhone").value), $("lPass").value);
+  }
   catch (err) { $("lErr").textContent = authMsg(err); }
+  btn.disabled = false; btn.textContent = "Login";
 });
 let registering = false;
 $("regForm").addEventListener("submit", async e => {
@@ -407,14 +426,17 @@ onAuthStateChanged(auth, u => { if (!u) started = false; });
 // ---------- helpers on savings ----------
 const cdText = t => { const d = t - Date.now(); if (d <= 0) return "Ready"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 864e5)}d ${z(Math.floor(d % 864e5 / 36e5))}:${z(Math.floor(d % 36e5 / 6e4))}:${z(Math.floor(d % 6e4 / 1e3))}`; };
 setInterval(() => document.querySelectorAll(".cd").forEach(e => { e.textContent = cdText(Number(e.dataset.t)); }), 1000);
-const machImg = (p, sm) => `<div class="mwrap">${p.image ? `<img class="mimg ${sm ? "sm" : ""}" src="${p.image}" alt="">` : `<div class="mimg ${sm ? "sm" : ""}" style="display:flex;align-items:center;justify-content:center;color:#475569;font-size:2.2rem"><i class="fa-solid fa-gears"></i></div>`}<span class="mprice">${fmt(p.minAmount)}</span><span class="mprice mdur">${p.lockDays} days</span>${p.locked ? `<div class="mlock"><i class="fa-solid fa-lock"></i> Locked</div>` : ""}</div>`;
+const machImg = (p, sm) => `<div class="mwrap">${p.image ? `<img class="mimg ${sm ? "sm" : ""}" src="${p.image}" alt="" loading="lazy" decoding="async">` : `<div class="mimg ${sm ? "sm" : ""}" style="display:flex;align-items:center;justify-content:center;color:#475569;font-size:2.2rem"><i class="fa-solid fa-gears"></i></div>`}<span class="mprice">${fmt(p.minAmount)}</span><span class="mprice mdur">${p.lockDays} days</span>${p.locked ? `<div class="mlock"><i class="fa-solid fa-lock"></i> Locked</div>` : ""}</div>`;
 const isReady = s => s.status === "active" && ms(s.releaseAt) && ms(s.releaseAt) <= Date.now();
 const sum = (arr, f) => arr.filter(f).reduce((a, s) => a + (Number(s.amount) || 0), 0);
 function stateOf(s) { return isReady(s) ? "ready" : s.status; }
 function stateText(s) { return ({ awaiting: "Awaiting confirmation", active: "Locked", ready: "Ready to withdraw", withdraw_requested: "Withdrawal requested", paid: "Paid out", cancelled: "Cancelled" })[stateOf(s)] || s.status; }
 
 // ---------- render ----------
-function renderAll() {
+let _raf = 0;
+function renderAll() { if (_raf) return; _raf = requestAnimationFrame(() => { _raf = 0; renderAllNow(); }); }
+const adminPlanCards = () => plans.map(p => `<div class="card">${machImg(p, true)}<div class="title">${esc(p.name)} ${tags(p)} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small" data-act="editPlan" data-id="${p.id}">Edit</button><button class="btn-small" data-act="planPhoto" data-id="${p.id}">${p.image ? "Change photo" : "Add photo"}</button><button class="btn-small grey" data-act="lockPlan" data-id="${p.id}">${p.locked ? "Unlock" : "Lock"}</button><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Hide" : "Show"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
+function renderAllNow() {
   if (!me) return;
   $("hSaved").textContent = fmt(sum(mySavings, s => s.status === "active" && !isReady(s)));
   const bL = sum(mySavings, s => s.status === "active" && !isReady(s)), bR = sum(mySavings, isReady), bP = sum(mySavings, s => s.status === "withdraw_requested");
@@ -436,10 +458,11 @@ function renderAll() {
 }
 const SERIES = ["All", "A-series", "B-series", "C-series", "D-series"];
 let seriesFilter = "All";
-const MACHINES = ["All machines", "Water Pumps", "Generators", "Standard Mining Boxes"];
+const BASE_MACHINES = ["Water Pumps", "Generators", "Standard Mining Boxes"];
+const machList = () => ["All machines", ...new Set([...BASE_MACHINES, ...plans.map(p => p.machine).filter(Boolean)])];
 let machineFilter = "All machines";
 const planMatch = p => p.active !== false && (seriesFilter === "All" || p.series === seriesFilter) && (machineFilter === "All machines" || p.machine === machineFilter);
-const machChips = () => MACHINES.map(x => `<button class="series-chip ${x === machineFilter ? "on" : ""}" data-mach="${x}">${x}</button>`).join("");
+const machChips = () => machList().map(x => `<button class="series-chip ${x === machineFilter ? "on" : ""}" data-mach="${x}">${x}</button>`).join("");
 const tags = p => `${p.series ? `<span class="tag">${esc(p.series)}</span> ` : ""}${p.machine ? `<span class="tag" style="background:#0e7490">${esc(p.machine)}</span>` : ""}`;
 function pickImage() {
   return new Promise((resolve, reject) => {
@@ -448,11 +471,11 @@ function pickImage() {
       const f = inp.files && inp.files[0]; if (!f) return resolve(null);
       const url = URL.createObjectURL(f), img = new Image();
       img.onload = () => {
-        const k = Math.min(1, 720 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+        const k = Math.min(1, 560 / Math.max(img.width, img.height)), c = document.createElement("canvas");
         c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        let out = c.toDataURL("image/jpeg", 0.72);
-        if (out.length > 600000) out = c.toDataURL("image/jpeg", 0.5);
+        let out = c.toDataURL("image/jpeg", 0.62);
+        if (out.length > 250000) out = c.toDataURL("image/jpeg", 0.45);
         URL.revokeObjectURL(url); resolve(out);
       };
       img.onerror = () => reject(new Error("Could not read that photo."));
@@ -514,7 +537,7 @@ function renderAdmin() {
   $("aPending").innerHTML = users.filter(u => u.status === "pending").map(u => `<div class="card"><div class="title">${esc(u.name)}</div><div class="row"><span>Phone</span><span>+${esc(u.phone)}</span></div><div class="actions"><button class="btn-small green" data-act="approveUser" data-id="${u.id}">Approve</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div>${s.provider ? `<div class="row"><span>Pays with</span><span>${esc(s.provider)} +${esc(s.payerPhone || "")}</span></div>` : ""}<div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
-  $("aPlans").innerHTML = plans.map(p => `<div class="card">${machImg(p, true)}<div class="title">${esc(p.name)} ${tags(p)} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small" data-act="planPhoto" data-id="${p.id}">${p.image ? "Change photo" : "Add photo"}</button><button class="btn-small grey" data-act="lockPlan" data-id="${p.id}">${p.locked ? "Unlock" : "Lock"}</button><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Hide" : "Show"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
+  $("aPlans").innerHTML = adminPlanCards(); $("mList").innerHTML = adminPlanCards();
   $("aMembers").innerHTML = users.filter(u => u.status === "approved").map(u => `<div class="card"><div class="row"><span><b style="color:#fff">${esc(u.name)}</b> ${u.role === "admin" ? '<span class="tag active">Admin</span>' : ""}</span><span>+${esc(u.phone)}</span></div>${u.id !== myUid ? `<div class="actions"><button class="btn-small grey" data-act="toggleAdmin" data-id="${u.id}">${u.role === "admin" ? "Remove admin" : "Make admin"}</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div>` : ""}</div>`).join("");
 }
 function renderChat() {
@@ -587,6 +610,7 @@ async function action(act, id, el) {
     else if (act === "toggleAdmin") { const u = users.find(x => x.id === id); await updateDoc(doc(db, "users", id), { role: u.role === "admin" ? "member" : "admin" }); }
     else if (act === "lockPlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { locked: !p.locked }); }
     else if (act === "togglePlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { active: p.active === false }); }
+    else if (act === "editPlan") openPlanForm(id);
     else if (act === "planPhoto") {
       try { const im = await pickImage(); if (im) await updateDoc(doc(db, "plans", id), { image: im }); }
       catch (err) { alert(err.message || "Photo failed."); }
@@ -595,17 +619,34 @@ async function action(act, id, el) {
     else if (act === "delNotice") await deleteDoc(doc(db, "notices", id));
   } catch (err) { alert("Could not do that: " + err.message); }
 }
-$("addPlanBtn").addEventListener("click", () => {
-  modal(`<h3>Add a savings plan</h3><label>Plan name</label><input id="pN" class="input-field plain" placeholder="e.g. 30-Day Lock"><label>Machine type</label><select id="pT" class="input-field plain"><option>Water Pumps</option><option>Generators</option><option>Standard Mining Boxes</option></select><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Lock period (days)</label><input id="pD" type="number" class="input-field plain" placeholder="30"><label>Minimum deposit (${CURRENCY})</label><input id="pM" type="number" class="input-field plain" placeholder="50000"><label>Machine photo</label><button type="button" class="btn-small grey" id="pPick" style="width:100%;padding:12px">Choose photo from phone</button><img id="pPrev" class="mimg sm" alt="" style="display:none;margin-top:10px"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save plan</button>`);
-    let pImg = "";
-    $("pPick").onclick = async () => { try { const im = await pickImage(); if (im) { pImg = im; $("pPrev").src = im; $("pPrev").style.display = "block"; $("pPick").textContent = "Change photo"; } } catch (err) { $("mErr").textContent = err.message; } };
+function openPlanForm(editId) {
+  const ex = editId ? plans.find(x => x.id === editId) : null;
+  modal(`<h3>${ex ? "Edit machine" : "Add a machine"}</h3><label>Machine name</label><input id="pN" class="input-field plain" placeholder="e.g. Water Pump 1"><label>Machine type</label><select id="pT" class="input-field plain"><option>Water Pumps</option><option>Generators</option><option>Standard Mining Boxes</option><option value="__other">Other (write it yourself)</option></select><input id="pTo" class="input-field plain" placeholder="Write the machine type, e.g. Solar Panels" style="display:none;margin-top:8px"><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Number of days (countdown)</label><input id="pD" type="number" inputmode="numeric" class="input-field plain" placeholder="30"><label>Price / amount (${CURRENCY})</label><input id="pM" type="number" inputmode="numeric" class="input-field plain" placeholder="50000"><label>Machine photo</label><button type="button" class="btn-small grey" id="pPick" style="width:100%;padding:12px">Choose photo from gallery</button><img id="pPrev" class="mimg sm" alt="" style="display:none;margin-top:10px"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${ex ? "Save changes" : "Save machine"}</button>`);
+  let pImg = "";
+  $("pT").onchange = () => { $("pTo").style.display = $("pT").value === "__other" ? "block" : "none"; };
+  if (ex) {
+    $("pN").value = ex.name || "";
+    if (ex.machine && !BASE_MACHINES.includes(ex.machine)) { $("pT").value = "__other"; $("pTo").value = ex.machine; $("pTo").style.display = "block"; } else $("pT").value = ex.machine || "Water Pumps"; $("pS").value = ex.series || "A-series";
+    $("pD").value = ex.lockDays; $("pM").value = ex.minAmount;
+    if (ex.image) { $("pPrev").src = ex.image; $("pPrev").style.display = "block"; $("pPick").textContent = "Change photo"; }
+  }
+  $("pPick").onclick = async () => { try { const im = await pickImage(); if (im) { pImg = im; $("pPrev").src = im; $("pPrev").style.display = "block"; $("pPick").textContent = "Change photo"; } } catch (err) { $("mErr").textContent = err.message; } };
   $("mGo").onclick = async () => {
     const name = $("pN").value.trim(), d = Math.floor(Number($("pD").value)), m = Math.floor(Number($("pM").value));
-    if (!name || !d || d < 1 || !m || m < 1) return $("mErr").textContent = "Fill in all fields.";
-    await addDoc(collection(db, "plans"), { name, series: $("pS").value, machine: $("pT").value, ...(pImg ? { image: pImg } : {}), lockDays: d, minAmount: m, active: true, createdAt: serverTimestamp() });
-    closeModal();
+    const mach = $("pT").value === "__other" ? $("pTo").value.trim().replace(/\s+/g, " ").slice(0, 40) : $("pT").value;
+    if (!name || !d || d < 1 || !m || m < 1) return $("mErr").textContent = "Fill in the name, days and price.";
+    if (!mach) return $("mErr").textContent = "Write the machine type.";
+    $("mGo").disabled = true;
+    try {
+      const data = { name, series: $("pS").value, machine: mach, lockDays: d, minAmount: m, ...(pImg ? { image: pImg } : {}) };
+      if (ex) await updateDoc(doc(db, "plans", ex.id), data);
+      else await addDoc(collection(db, "plans"), { ...data, active: true, createdAt: serverTimestamp() });
+      closeModal();
+    } catch (err) { $("mGo").disabled = false; $("mErr").textContent = "Could not save. Check your internet and try again."; }
   };
-});
+}
+$("addPlanBtn").addEventListener("click", () => openPlanForm());
+$("mAddBtn").addEventListener("click", () => openPlanForm());
 $("postNotice").addEventListener("click", async () => {
   const t = $("noticeText").value.trim(); if (!t) return;
   await addDoc(collection(db, "notices"), { text: t, at: serverTimestamp(), by: myUid }); $("noticeText").value = "";
