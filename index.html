@@ -98,6 +98,8 @@ h2.t{text-align:center;margin:8px 0 14px}
 .dep-steps{display:flex;gap:8px;margin-bottom:6px}.dep-step{flex:1;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:12px 8px;text-align:center;font-size:.8rem;color:#94a3b8}.dep-step i{display:flex;width:32px;height:32px;margin:0 auto 6px;border-radius:50%;background:#1e3a8a;color:#93c5fd;align-items:center;justify-content:center}
 .dep-card{background:#0b1220;border:1px solid #1e293b;border-radius:16px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:center}.dep-ico{width:46px;height:46px;border-radius:13px;background:#1e3a8a;color:#93c5fd;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:0 0 auto}.dep-info{flex:1;min-width:0}.dep-info .n{color:#fff;font-weight:700;font-size:1.02rem}.dep-info .m{color:#94a3b8;font-size:.85rem;margin-top:3px}.dep-card .btn-small{flex:0 0 auto}
 .bal-card{background:linear-gradient(135deg,#1d4ed8,#0e7490);border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(29,78,216,.25)}.bal-card small{display:block;color:#bfdbfe;font-size:.85rem}.bal-total{color:#fff;font-size:2rem;font-weight:800;margin:2px 0 12px}.bal-row{display:flex;gap:8px;margin-bottom:14px}.bal-row div{flex:1;background:rgba(2,6,23,.28);border-radius:12px;padding:8px 10px}.bal-row b{display:block;color:#fff;font-size:.98rem}.bal-btns{display:flex;gap:10px}.bal-btns button{flex:1;padding:12px;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer}.bal-dep{background:#fff;color:#1d4ed8}.bal-wd{background:#065f46;color:#fff}
+.mimg{display:block;width:100%;height:170px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#0f172a}.mimg.sm{height:110px}.dep-img{width:56px;height:56px;border-radius:13px;object-fit:cover;flex:0 0 auto;background:#0f172a}
+.mwrap{position:relative;margin-bottom:10px}.mwrap .mimg{margin:0}.mprice{position:absolute;left:10px;bottom:10px;background:rgba(2,6,23,.82);color:#fff;font-weight:800;padding:6px 12px;border-radius:10px;font-size:.95rem}.mprice.mdur{left:auto;right:10px;background:rgba(29,78,216,.9)}.mlock{position:absolute;inset:0;border-radius:12px;background:rgba(2,6,23,.62);display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-weight:800;font-size:1.1rem}.cd{font-variant-numeric:tabular-nums}
 .sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
 </style>
 </head>
@@ -148,6 +150,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="dash-header"><div class="dash-brand">AJX Savings</div><div class="dash-msg-btn" data-tab="tabNotices"><i class="fa-regular fa-bell"></i><span>Notices</span></div></div>
     <div class="bal-card"><small>Total savings with the group</small><div class="bal-total" id="bTotal">0</div>
       <div class="bal-row"><div><small>Locked</small><b id="bLocked">0</b></div><div><small>Ready</small><b id="bReady">0</b></div><div><small>Payout pending</small><b id="bPend">0</b></div></div>
+      <small style="margin:-4px 0 10px">Next release in <b class="cd" id="bNext" data-t="0">-</b></small>
       <div class="bal-btns"><button class="bal-dep" data-tab="tabDeposit"><i class="fa-solid fa-plus"></i> Deposit</button><button class="bal-wd" data-act="withdrawAll"><i class="fa-solid fa-hand-holding-dollar"></i> Withdraw</button></div></div>
     <div class="hero-banner"><p>Your savings are held by the group. <b>You get back exactly what you deposit</b> on the release date you chose. No profit is promised.</p></div>
     <div class="grid-2">
@@ -188,6 +191,7 @@ h2.t{text-align:center;margin:8px 0 14px}
   <div id="tabPlans" class="tab-content" style="display:none">
     <h2 class="t">Savings plans</h2>
     <div class="series-bar" id="seriesBar"></div>
+    <div class="series-bar" id="machBar"></div>
     <p class="note">Pick a plan, choose how much you will save, then pay the group treasurer. Your plan starts when the admin confirms your payment.</p>
     <div id="planList"></div>
   </div>
@@ -198,6 +202,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="dep-steps"><div class="dep-step"><i class="fa-solid fa-list-check"></i>1. Choose a plan</div><div class="dep-step"><i class="fa-solid fa-hand-holding-dollar"></i>2. Pay the treasurer</div><div class="dep-step"><i class="fa-solid fa-circle-check"></i>3. Admin confirms</div></div>
     <div class="sec">Choose a plan</div>
     <div class="series-bar" id="depBar"></div>
+    <div class="series-bar" id="depMach"></div>
     <div id="depList"></div>
     <div class="sec">Waiting for confirmation</div>
     <div id="depAwait"></div>
@@ -400,6 +405,9 @@ function startApp() {
 onAuthStateChanged(auth, u => { if (!u) started = false; });
 
 // ---------- helpers on savings ----------
+const cdText = t => { const d = t - Date.now(); if (d <= 0) return "Ready"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 864e5)}d ${z(Math.floor(d % 864e5 / 36e5))}:${z(Math.floor(d % 36e5 / 6e4))}:${z(Math.floor(d % 6e4 / 1e3))}`; };
+setInterval(() => document.querySelectorAll(".cd").forEach(e => { e.textContent = cdText(Number(e.dataset.t)); }), 1000);
+const machImg = (p, sm) => `<div class="mwrap">${p.image ? `<img class="mimg ${sm ? "sm" : ""}" src="${p.image}" alt="">` : `<div class="mimg ${sm ? "sm" : ""}" style="display:flex;align-items:center;justify-content:center;color:#475569;font-size:2.2rem"><i class="fa-solid fa-gears"></i></div>`}<span class="mprice">${fmt(p.minAmount)}</span><span class="mprice mdur">${p.lockDays} days</span>${p.locked ? `<div class="mlock"><i class="fa-solid fa-lock"></i> Locked</div>` : ""}</div>`;
 const isReady = s => s.status === "active" && ms(s.releaseAt) && ms(s.releaseAt) <= Date.now();
 const sum = (arr, f) => arr.filter(f).reduce((a, s) => a + (Number(s.amount) || 0), 0);
 function stateOf(s) { return isReady(s) ? "ready" : s.status; }
@@ -417,6 +425,7 @@ function renderAll() {
   $("hPlans").textContent = mySavings.filter(s => ["active", "awaiting", "withdraw_requested"].includes(s.status)).length;
   const nxt = mySavings.filter(s => s.status === "active" && !isReady(s)).map(s => ms(s.releaseAt)).sort((a, b) => a - b)[0];
   $("hNext").textContent = nxt ? dd(nxt) : "-";
+  $("bNext").dataset.t = nxt || 0; $("bNext").textContent = nxt ? cdText(nxt) : "-";
   $("hMembers").textContent = isAdmin ? users.filter(u => u.status === "approved").length : "-";
   $("mLocked").textContent = $("hSaved").textContent; $("mReady").textContent = $("hReady").textContent;
   $("myName").textContent = me.name; $("myPhone").textContent = "+" + me.phone; $("myRole").textContent = isAdmin ? "Admin" : "Member";
@@ -427,24 +436,53 @@ function renderAll() {
 }
 const SERIES = ["All", "A-series", "B-series", "C-series", "D-series"];
 let seriesFilter = "All";
+const MACHINES = ["All machines", "Water Pumps", "Generators", "Standard Mining Boxes"];
+let machineFilter = "All machines";
+const planMatch = p => p.active !== false && (seriesFilter === "All" || p.series === seriesFilter) && (machineFilter === "All machines" || p.machine === machineFilter);
+const machChips = () => MACHINES.map(x => `<button class="series-chip ${x === machineFilter ? "on" : ""}" data-mach="${x}">${x}</button>`).join("");
+const tags = p => `${p.series ? `<span class="tag">${esc(p.series)}</span> ` : ""}${p.machine ? `<span class="tag" style="background:#0e7490">${esc(p.machine)}</span>` : ""}`;
+function pickImage() {
+  return new Promise((resolve, reject) => {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return resolve(null);
+      const url = URL.createObjectURL(f), img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 720 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        let out = c.toDataURL("image/jpeg", 0.72);
+        if (out.length > 600000) out = c.toDataURL("image/jpeg", 0.5);
+        URL.revokeObjectURL(url); resolve(out);
+      };
+      img.onerror = () => reject(new Error("Could not read that photo."));
+      img.src = url;
+    };
+    inp.click();
+  });
+}
 function renderPlans() {
   renderDeposit();
   $("seriesBar").innerHTML = SERIES.map(x => `<button class="series-chip ${x === seriesFilter ? "on" : ""}" data-series="${x}">${x}</button>`).join("");
-  const act = plans.filter(p => p.active !== false && (seriesFilter === "All" || p.series === seriesFilter));
-  $("planList").innerHTML = act.map(p => `<div class="card"><div class="title">${esc(p.name)}${p.series ? ` <span class="tag">${esc(p.series)}</span>` : ""}</div>
+  $("machBar").innerHTML = machChips();
+  const act = plans.filter(planMatch);
+  $("planList").innerHTML = act.map(p => `<div class="card">${machImg(p)}<div class="title">${esc(p.name)} ${tags(p)}</div>
     <div class="row"><span>Lock period</span><span>${p.lockDays} days</span></div>
     <div class="row"><span>Minimum deposit</span><span>${fmt(p.minAmount)}</span></div>
     <div class="row"><span>You get back</span><span>Exactly what you deposited</span></div>
-    <div class="actions"><button class="btn-small" data-act="startPlan" data-id="${p.id}">Start this plan</button></div></div>`).join("") || `<div class="empty">${seriesFilter === "All" ? "The admin has not added any plans yet." : "No plans in " + seriesFilter + " yet."}</div>`;
+    <div class="actions">${p.locked ? `<button class="btn-small grey" disabled><i class="fa-solid fa-lock"></i> Locked</button>` : `<button class="btn-small" data-act="startPlan" data-id="${p.id}">Start this plan</button>`}</div></div>`).join("") || `<div class="empty">${seriesFilter === "All" && machineFilter === "All machines" ? "The admin has not added any plans yet." : "No machines here yet."}</div>`;
 }
-function onSeries(e) { const b = e.target.closest("[data-series]"); if (!b) return; seriesFilter = b.dataset.series; renderPlans(); }
+function onSeries(e) { const b = e.target.closest("[data-series],[data-mach]"); if (!b) return; if (b.dataset.series) seriesFilter = b.dataset.series; else machineFilter = b.dataset.mach; renderPlans(); }
 $("seriesBar").addEventListener("click", onSeries);
 $("depBar").addEventListener("click", onSeries);
+$("machBar").addEventListener("click", onSeries);
+$("depMach").addEventListener("click", onSeries);
 function renderDeposit() {
   const chips = SERIES.map(x => `<button class="series-chip ${x === seriesFilter ? "on" : ""}" data-series="${x}">${x}</button>`).join("");
   $("depBar").innerHTML = chips;
-  const list = plans.filter(p => p.active !== false && (seriesFilter === "All" || p.series === seriesFilter));
-  $("depList").innerHTML = list.map(p => `<div class="dep-card"><div class="dep-ico"><i class="fa-solid fa-piggy-bank"></i></div><div class="dep-info"><div class="n">${esc(p.name)} ${p.series ? `<span class="tag">${esc(p.series)}</span>` : ""}</div><div class="m">Lock ${p.lockDays} days &middot; Min ${fmt(p.minAmount)}</div></div><button class="btn-small" data-act="startPlan" data-id="${p.id}">Deposit</button></div>`).join("") || `<div class="empty">${seriesFilter === "All" ? "The admin has not added any plans yet." : "No plans in " + seriesFilter + " yet."}</div>`;
+  $("depMach").innerHTML = machChips();
+  const list = plans.filter(planMatch);
+  $("depList").innerHTML = list.map(p => `<div class="dep-card">${p.image ? `<img class="dep-img" src="${p.image}" alt="">` : `<div class="dep-ico"><i class="fa-solid fa-piggy-bank"></i></div>`}<div class="dep-info"><div class="n">${esc(p.name)} ${tags(p)}</div><div class="m">Lock ${p.lockDays} days &middot; Min ${fmt(p.minAmount)}</div></div>${p.locked ? `<button class="btn-small grey" disabled><i class="fa-solid fa-lock"></i> Locked</button>` : `<button class="btn-small" data-act="startPlan" data-id="${p.id}">Deposit</button>`}</div>`).join("") || `<div class="empty">${seriesFilter === "All" && machineFilter === "All machines" ? "The admin has not added any plans yet." : "No machines here yet."}</div>`;
   const aw = mySavings.filter(x => x.status === "awaiting");
   $("dLocked").textContent = $("hSaved").textContent; $("dReady").textContent = $("hReady").textContent;
   $("dAwait").textContent = fmt(aw.reduce((t, x) => t + Number(x.amount || 0), 0));
@@ -463,6 +501,7 @@ function renderRecords() {
       <div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div>
       ${s.status === "awaiting" ? `<div class="row"><span>Next step</span><span>Pay the treasurer, then wait for confirmation</span></div>` : ""}
       ${ms(s.releaseAt) ? `<div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div>` : ""}
+      ${s.status === "active" && ms(s.releaseAt) ? `<div class="row"><span>Time left</span><span class="cd" style="color:#fcd34d;font-weight:800" data-t="${ms(s.releaseAt)}">${cdText(ms(s.releaseAt))}</span></div>` : ""}
       ${s.status === "paid" ? `<div class="row"><span>Paid out</span><span>${dt(s.paidAt)}</span></div>` : ""}
       ${btns ? `<div class="actions">${btns}</div>` : ""}</div>`;
   }).join("") || `<div class="empty">No savings yet. Open Plans to start.</div>`;
@@ -475,7 +514,7 @@ function renderAdmin() {
   $("aPending").innerHTML = users.filter(u => u.status === "pending").map(u => `<div class="card"><div class="title">${esc(u.name)}</div><div class="row"><span>Phone</span><span>+${esc(u.phone)}</span></div><div class="actions"><button class="btn-small green" data-act="approveUser" data-id="${u.id}">Approve</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div>${s.provider ? `<div class="row"><span>Pays with</span><span>${esc(s.provider)} +${esc(s.payerPhone || "")}</span></div>` : ""}<div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
-  $("aPlans").innerHTML = plans.map(p => `<div class="card"><div class="title">${esc(p.name)} ${p.series ? `<span class="tag">${esc(p.series)}</span>` : ""} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Turn off" : "Turn on"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
+  $("aPlans").innerHTML = plans.map(p => `<div class="card">${machImg(p, true)}<div class="title">${esc(p.name)} ${tags(p)} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small" data-act="planPhoto" data-id="${p.id}">${p.image ? "Change photo" : "Add photo"}</button><button class="btn-small grey" data-act="lockPlan" data-id="${p.id}">${p.locked ? "Unlock" : "Lock"}</button><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Hide" : "Show"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
   $("aMembers").innerHTML = users.filter(u => u.status === "approved").map(u => `<div class="card"><div class="row"><span><b style="color:#fff">${esc(u.name)}</b> ${u.role === "admin" ? '<span class="tag active">Admin</span>' : ""}</span><span>+${esc(u.phone)}</span></div>${u.id !== myUid ? `<div class="actions"><button class="btn-small grey" data-act="toggleAdmin" data-id="${u.id}">${u.role === "admin" ? "Remove admin" : "Make admin"}</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div>` : ""}</div>`).join("");
 }
 function renderChat() {
@@ -492,7 +531,8 @@ async function action(act, id, el) {
   try {
     if (act === "startPlan") {
       const p = plans.find(x => x.id === id); if (!p) return;
-      modal(`<h3>${esc(p.name)} ${p.series ? `<span class="tag">${esc(p.series)}</span>` : ""}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. ${PAYMENTS_ON ? "You will get a prompt on your phone to approve the payment with your mobile money PIN." : "After you pay the treasurer, the admin confirms."} Your ${p.lockDays} days begin once the money is confirmed. On the release date you can withdraw exactly what you saved.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><label>Pay with</label><div class="series-bar" id="provBar"><button type="button" class="series-chip on" data-prov="MTN">MTN MoMo</button><button type="button" class="series-chip" data-prov="AIRTEL">Airtel Money</button></div><label>Mobile money number</label><input id="mPhone" type="tel" inputmode="numeric" class="input-field plain" value="${esc(me.phone)}" placeholder="2567..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${PAYMENTS_ON ? "Pay now" : "Request this plan"}</button>`);
+      if (p.locked) return alert("This machine is locked right now.");
+      modal(`<h3>${esc(p.name)} ${tags(p)}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. ${PAYMENTS_ON ? "You will get a prompt on your phone to approve the payment with your mobile money PIN." : "After you pay the treasurer, the admin confirms."} Your ${p.lockDays} days begin once the money is confirmed. On the release date you can withdraw exactly what you saved.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><label>Pay with</label><div class="series-bar" id="provBar"><button type="button" class="series-chip on" data-prov="MTN">MTN MoMo</button><button type="button" class="series-chip" data-prov="AIRTEL">Airtel Money</button></div><label>Mobile money number</label><input id="mPhone" type="tel" inputmode="numeric" class="input-field plain" value="${esc(me.phone)}" placeholder="2567..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${PAYMENTS_ON ? "Pay now" : "Request this plan"}</button>`);
       let prov = "MTN";
       $("provBar").onclick = e => { const b = e.target.closest("[data-prov]"); if (!b) return; prov = b.dataset.prov; document.querySelectorAll("#provBar .series-chip").forEach(c => c.classList.toggle("on", c === b)); };
       $("mGo").onclick = async () => {
@@ -504,6 +544,7 @@ async function action(act, id, el) {
         if (!/^256\d{9}$/.test(pay)) { $("mGo").disabled = false; return $("mErr").textContent = "Enter a valid number, e.g. 0772123456"; }
         const rec = { uid: myUid, name: me.name, phone: me.phone, planId: p.id, planName: p.name, amount: a, lockDays: Number(p.lockDays), status: "awaiting", provider: prov, payerPhone: pay, createdAt: serverTimestamp() };
         if (p.series) rec.series = p.series;
+        if (p.machine) rec.machine = p.machine;
         const ref = await addDoc(collection(db, "savings"), rec);
         if (!PAYMENTS_ON) { closeModal(); return openTab("tabRecords"); }
         try {
@@ -544,17 +585,24 @@ async function action(act, id, el) {
     else if (act === "doneReset") await deleteDoc(doc(db, "resetRequests", id));
     else if (act === "rejectUser") { if (confirm("Remove this member from the group?")) await deleteDoc(doc(db, "users", id)); }
     else if (act === "toggleAdmin") { const u = users.find(x => x.id === id); await updateDoc(doc(db, "users", id), { role: u.role === "admin" ? "member" : "admin" }); }
+    else if (act === "lockPlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { locked: !p.locked }); }
     else if (act === "togglePlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { active: p.active === false }); }
+    else if (act === "planPhoto") {
+      try { const im = await pickImage(); if (im) await updateDoc(doc(db, "plans", id), { image: im }); }
+      catch (err) { alert(err.message || "Photo failed."); }
+    }
     else if (act === "delPlan") { if (confirm("Delete this plan? Existing savings are not affected.")) await deleteDoc(doc(db, "plans", id)); }
     else if (act === "delNotice") await deleteDoc(doc(db, "notices", id));
   } catch (err) { alert("Could not do that: " + err.message); }
 }
 $("addPlanBtn").addEventListener("click", () => {
-  modal(`<h3>Add a savings plan</h3><label>Plan name</label><input id="pN" class="input-field plain" placeholder="e.g. 30-Day Lock"><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Lock period (days)</label><input id="pD" type="number" class="input-field plain" placeholder="30"><label>Minimum deposit (${CURRENCY})</label><input id="pM" type="number" class="input-field plain" placeholder="50000"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save plan</button>`);
+  modal(`<h3>Add a savings plan</h3><label>Plan name</label><input id="pN" class="input-field plain" placeholder="e.g. 30-Day Lock"><label>Machine type</label><select id="pT" class="input-field plain"><option>Water Pumps</option><option>Generators</option><option>Standard Mining Boxes</option></select><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Lock period (days)</label><input id="pD" type="number" class="input-field plain" placeholder="30"><label>Minimum deposit (${CURRENCY})</label><input id="pM" type="number" class="input-field plain" placeholder="50000"><label>Machine photo</label><button type="button" class="btn-small grey" id="pPick" style="width:100%;padding:12px">Choose photo from phone</button><img id="pPrev" class="mimg sm" alt="" style="display:none;margin-top:10px"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save plan</button>`);
+    let pImg = "";
+    $("pPick").onclick = async () => { try { const im = await pickImage(); if (im) { pImg = im; $("pPrev").src = im; $("pPrev").style.display = "block"; $("pPick").textContent = "Change photo"; } } catch (err) { $("mErr").textContent = err.message; } };
   $("mGo").onclick = async () => {
     const name = $("pN").value.trim(), d = Math.floor(Number($("pD").value)), m = Math.floor(Number($("pM").value));
     if (!name || !d || d < 1 || !m || m < 1) return $("mErr").textContent = "Fill in all fields.";
-    await addDoc(collection(db, "plans"), { name, series: $("pS").value, lockDays: d, minAmount: m, active: true, createdAt: serverTimestamp() });
+    await addDoc(collection(db, "plans"), { name, series: $("pS").value, machine: $("pT").value, ...(pImg ? { image: pImg } : {}), lockDays: d, minAmount: m, active: true, createdAt: serverTimestamp() });
     closeModal();
   };
 });
