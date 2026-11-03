@@ -103,7 +103,7 @@ h2.t{text-align:center;margin:8px 0 14px}
 .bal-card{background:linear-gradient(135deg,#1d4ed8,#0e7490);border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(29,78,216,.25)}.bal-card small{display:block;color:#bfdbfe;font-size:.85rem}.bal-total{color:#fff;font-size:2rem;font-weight:800;margin:2px 0 12px}.bal-row{display:flex;gap:8px;margin-bottom:14px}.bal-row div{flex:1;background:rgba(2,6,23,.28);border-radius:12px;padding:8px 10px}.bal-row b{display:block;color:#fff;font-size:.98rem}.bal-btns{display:flex;gap:10px}.bal-btns button{flex:1;padding:12px;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer}.bal-dep{background:#fff;color:#1d4ed8}.bal-wd{background:#065f46;color:#fff}
 .mimg{display:block;width:100%;height:170px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#0f172a}.mimg.sm{height:110px}.dep-img{width:56px;height:56px;border-radius:13px;object-fit:cover;flex:0 0 auto;background:#0f172a}
 .mwrap{position:relative;margin-bottom:10px}.mwrap .mimg{margin:0}.mprice{position:absolute;left:10px;bottom:10px;background:rgba(2,6,23,.82);color:#fff;font-weight:800;padding:6px 12px;border-radius:10px;font-size:.95rem}.mprice.mdur{left:auto;right:10px;background:rgba(29,78,216,.9)}.mlock{position:absolute;inset:0;border-radius:12px;background:rgba(2,6,23,.62);display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-weight:800;font-size:1.1rem}.cd{font-variant-numeric:tabular-nums}
-#backBar{position:sticky;top:0;z-index:20;padding:8px 0;background:rgba(3,7,18,.94)}#backBtn{display:inline-flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #1e3a8a;color:#93c5fd;border-radius:22px;padding:9px 18px;font-size:1rem;font-weight:700;cursor:pointer}
+#backBar{position:sticky;top:0;z-index:20;padding:8px 0;margin-bottom:12px;background:rgba(3,7,18,.94)}#backBtn{display:inline-flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #1e3a8a;color:#93c5fd;border-radius:22px;padding:9px 18px;font-size:1rem;font-weight:700;cursor:pointer}
 .sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
 </style>
 </head>
@@ -114,7 +114,7 @@ h2.t{text-align:center;margin:8px 0 14px}
 <!-- LOGIN -->
 <div id="loginPage" class="view-page active"><div class="auth-container">
   <h1 class="auth-title">AJX Savings Hub</h1>
-  <div class="auth-subtitle">Save together. Get back exactly what you saved.</div>
+  <div class="auth-subtitle">Save together and earn a daily commission.</div>
   <form id="loginForm">
     <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="lPhone" class="input-field" placeholder="Phone Number" required></div>
     <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="lPass" class="input-field" placeholder="Password" required><i class="fa-solid fa-eye-slash right-icon" data-eye="lPass"></i></div>
@@ -157,9 +157,9 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="bal-card"><small>Total savings with the group</small><div class="bal-total" id="bTotal">0</div>
       <div class="bal-row"><div><small>Locked</small><b id="bLocked">0</b></div><div><small>Ready</small><b id="bReady">0</b></div><div><small>Payout pending</small><b id="bPend">0</b></div></div>
       <small style="margin:-4px 0 10px">Next release in <b class="cd" id="bNext" data-t="0">-</b></small>
-      <small style="margin:-4px 0 10px">Earned so far <b id="bEarn">0</b> &middot; Expected per day <b id="bDaily">0</b></small>
+      <small style="margin:-4px 0 10px">Commission earned <b id="bEarn">0</b> &middot; Commission per day <b id="bDaily">0</b></small>
       <div class="bal-btns"><button class="bal-dep" data-tab="tabDeposit"><i class="fa-solid fa-plus"></i> Deposit</button><button class="bal-wd" data-act="withdrawAll"><i class="fa-solid fa-hand-holding-dollar"></i> Withdraw</button></div></div>
-    <div class="hero-banner"><p>Your savings are held by the group. <b>You get back exactly what you deposit</b> on the release date you chose. No profit is promised.</p></div>
+    <div class="hero-banner"><p>Your savings are held by the group. On the release date you receive <b>your savings plus the daily commission</b> shown on your machine.</p></div>
     <div class="grid-2">
       <div class="stat-card"><div class="stat-val" id="hSaved">0</div><div class="stat-label">Locked savings</div></div>
       <div class="stat-card"><div class="stat-val" id="hReady">0</div><div class="stat-label">Ready to withdraw</div></div>
@@ -169,8 +169,8 @@ h2.t{text-align:center;margin:8px 0 14px}
       <div class="stat-card"><div class="stat-val" id="hPaid">0</div><div class="stat-label">Withdrawn so far</div></div>
     </div>
     <div class="grid-2">
-      <div class="stat-card"><div class="stat-val" id="hEarn">0</div><div class="stat-label">Earned so far</div></div>
-      <div class="stat-card"><div class="stat-val" id="hDaily">0</div><div class="stat-label">Expected per day</div></div>
+      <div class="stat-card"><div class="stat-val" id="hEarn">0</div><div class="stat-label">Commission earned</div></div>
+      <div class="stat-card"><div class="stat-val" id="hDaily">0</div><div class="stat-label">Commission per day</div></div>
     </div>
     <div class="grid-3">
       <div class="stat-card"><div class="stat-val" id="hPlans">0</div><div class="stat-label">My plans</div></div>
@@ -250,9 +250,11 @@ h2.t{text-align:center;margin:8px 0 14px}
   <div id="tabAdmin" class="tab-content" style="display:none">
     <h2 class="t">Admin panel</h2>
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aHeld">0</div><div class="stat-label">Held by group</div></div><div class="stat-card"><div class="stat-val" id="aOwed">0</div><div class="stat-label">Withdrawals due</div></div></div>
+    <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aEarn">0</div><div class="stat-label">Commission earned (all)</div></div><div class="stat-card"><div class="stat-val" id="aDay">0</div><div class="stat-label">Commission per day (all)</div></div></div>
     <div class="sec">Password reset requests</div><div id="aResets"></div>
     <div class="sec">Members waiting for approval</div><div id="aPending"></div>
     <div class="sec">Deposits to confirm (money received?)</div><div id="aDeposits"></div>
+    <div class="sec">Active deposits &amp; daily commission</div><div id="aActive"></div>
     <div class="sec">Withdrawals to pay out</div><div id="aWithdraws"></div>
     <div class="sec">Plans</div><div id="aPlans"></div><button class="btn-small" id="addPlanBtn">+ Add plan</button>
     <div class="sec">Payment numbers (where members send money)</div><div id="aNums"></div><button class="btn-small" id="addNumBtn">+ Add number</button>
@@ -445,15 +447,24 @@ onAuthStateChanged(auth, u => { if (!u) started = false; });
 // ---------- helpers on savings ----------
 const cdText = t => { const d = t - Date.now(); if (d <= 0) return "Ready"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 864e5)}d ${z(Math.floor(d % 864e5 / 36e5))}:${z(Math.floor(d % 36e5 / 6e4))}:${z(Math.floor(d % 6e4 / 1e3))}`; };
 setInterval(() => document.querySelectorAll(".cd").forEach(e => { e.textContent = cdText(Number(e.dataset.t)); }), 1000);
-const machImg = (p, sm) => `<div class="mwrap">${p.image ? `<img class="mimg ${sm ? "sm" : ""}" src="${p.image}" alt="" loading="lazy" decoding="async">` : `<div class="mimg ${sm ? "sm" : ""}" style="display:flex;align-items:center;justify-content:center;color:#475569;font-size:2.2rem"><i class="fa-solid fa-gears"></i></div>`}<span class="mprice">${fmt(p.minAmount)}</span><span class="mprice mdur">${p.lockDays} days</span>${p.locked ? `<div class="mlock"><i class="fa-solid fa-lock"></i> Locked</div>` : ""}</div>`;
-const earnOf = s => { const d = Number(s.dailyAmount || 0); if (!d || !["active", "withdraw_requested", "paid"].includes(s.status)) return 0; const st = ms(s.activatedAt) || (ms(s.releaseAt) - Number(s.lockDays) * 864e5); return d * Math.min(Number(s.lockDays), Math.max(0, Math.floor((Date.now() - st) / 864e5))); };
+const machImg = (p, sm) => `<div class="mwrap">${p.image ? `<img class="mimg ${sm ? "sm" : ""}" src="${p.image}" alt="" loading="lazy" decoding="async">` : `<div class="mimg ${sm ? "sm" : ""}" style="display:flex;align-items:center;justify-content:center;color:#475569;font-size:2.2rem"><i class="fa-solid fa-gears"></i></div>`}<span class="mprice">${fmt(p.minAmount)}</span><span class="mprice mdur">${p.lockDays} days</span>${p.dailyAmount ? `<span class="mprice" style="bottom:auto;top:10px;background:rgba(5,150,105,.92)">+${fmt(p.dailyAmount)} / day</span>` : ""}${p.locked ? `<div class="mlock"><i class="fa-solid fa-lock"></i> Locked</div>` : ""}</div>`;
+const startOf = s => ms(s.activatedAt) || (ms(s.releaseAt) - Number(s.lockDays) * 864e5);
+const dayOf = s => Math.min(Number(s.lockDays), Math.max(1, Math.floor((Date.now() - startOf(s)) / 864e5) + 1));
+const earnOf = s => { const d = Number(s.dailyAmount || 0); return d && ["active", "withdraw_requested", "paid"].includes(s.status) ? d * dayOf(s) : 0; };
+const dailyFor = s => { const pl = plans.find(x => x.id === s.planId); return pl && pl.dailyAmount && pl.minAmount ? Math.round(Number(pl.dailyAmount) * Number(s.amount) / Number(pl.minAmount)) : 0; };
 const payoutOf = s => Number(s.amount) + earnOf(s);
 function updateEarn() {
   if (!me) return;
   const live = mySavings.filter(x => ["active", "withdraw_requested"].includes(x.status));
   const e = live.reduce((t, x) => t + earnOf(x), 0), d = mySavings.filter(x => x.status === "active" && !isReady(x)).reduce((t, x) => t + Number(x.dailyAmount || 0), 0);
   ["hEarn", "bEarn"].forEach(i => { if ($(i)) $(i).textContent = fmt(e); }); ["hDaily", "bDaily"].forEach(i => { if ($(i)) $(i).textContent = fmt(d); });
-  document.querySelectorAll(".earn").forEach(el => { const x = mySavings.find(y => y.id === el.dataset.id); if (x) el.textContent = fmt(earnOf(x)); });
+  const all = isAdmin ? allSavings : mySavings;
+  if (isAdmin && $("aEarn")) {
+    $("aEarn").textContent = fmt(allSavings.filter(x => ["active", "withdraw_requested"].includes(x.status)).reduce((t, x) => t + earnOf(x), 0));
+    $("aDay").textContent = fmt(allSavings.filter(x => x.status === "active" && !isReady(x)).reduce((t, x) => t + Number(x.dailyAmount || 0), 0));
+  }
+  document.querySelectorAll(".earn").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.textContent = fmt(earnOf(x)); });
+  document.querySelectorAll(".dayn").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.textContent = "Day " + dayOf(x) + " of " + x.lockDays; });
 }
 setInterval(updateEarn, 1000);
 const isReady = s => s.status === "active" && ms(s.releaseAt) && ms(s.releaseAt) <= Date.now();
@@ -523,7 +534,7 @@ function renderPlans() {
   $("planList").innerHTML = act.map(p => `<div class="card">${machImg(p)}<div class="title">${esc(p.name)} ${tags(p)}</div>
     <div class="row"><span>Lock period</span><span>${p.lockDays} days</span></div>
     <div class="row"><span>Minimum deposit</span><span>${fmt(p.minAmount)}</span></div>
-    ${p.dailyAmount ? `<div class="row"><span>Expected daily income</span><span>${fmt(p.dailyAmount)}</span></div><div class="row"><span>Expected total after ${p.lockDays} days</span><span>${fmt(Number(p.minAmount) + Number(p.dailyAmount) * Number(p.lockDays))}</span></div>` : `<div class="row"><span>You get back</span><span>Exactly what you deposited</span></div>`}
+    ${p.dailyAmount ? `<div class="row"><span>Daily commission</span><span>${fmt(p.dailyAmount)}</span></div><div class="row"><span>Total after ${p.lockDays} days (savings + commission)</span><span>${fmt(Number(p.minAmount) + Number(p.dailyAmount) * Number(p.lockDays))}</span></div>` : ""}
     <div class="actions">${p.locked ? `<button class="btn-small grey" disabled><i class="fa-solid fa-lock"></i> Locked</button>` : `<button class="btn-small" data-act="startPlan" data-id="${p.id}">Start this plan</button>`}</div></div>`).join("") || `<div class="empty">${seriesFilter === "All" && machineFilter === "All machines" ? "The admin has not added any plans yet." : "No machines here yet."}</div>`;
 }
 function onSeries(e) { const b = e.target.closest("[data-series],[data-mach]"); if (!b) return; if (b.dataset.series) seriesFilter = b.dataset.series; else machineFilter = b.dataset.mach; renderPlans(); }
@@ -555,7 +566,7 @@ function renderRecords() {
       <div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div>
       ${s.status === "awaiting" ? `<div class="row"><span>Next step</span><span>Pay the treasurer, then wait for confirmation</span></div>` : ""}
       ${ms(s.releaseAt) ? `<div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div>` : ""}
-      ${s.dailyAmount && ["active", "withdraw_requested", "paid"].includes(s.status) ? `<div class="row"><span>Expected daily income</span><span>${fmt(s.dailyAmount)}</span></div><div class="row"><span>Earned so far</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${s.id}">${fmt(earnOf(s))}</span></div><div class="row"><span>You receive at release</span><span>${fmt(Number(s.amount) + Number(s.dailyAmount) * Number(s.lockDays))}</span></div>` : ""}
+      ${s.dailyAmount && ["active", "withdraw_requested", "paid"].includes(s.status) ? `<div class="row"><span>Daily commission</span><span>${fmt(s.dailyAmount)}</span></div><div class="row"><span>Commission earned</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${s.id}">${fmt(earnOf(s))}</span></div><div class="row"><span>Commission day</span><span class="dayn" data-id="${s.id}">Day ${dayOf(s)} of ${s.lockDays}</span></div><div class="row"><span>You receive at release</span><span>${fmt(Number(s.amount) + Number(s.dailyAmount) * Number(s.lockDays))}</span></div>` : ""}
       ${s.status === "active" && ms(s.releaseAt) ? `<div class="row"><span>Time left</span><span class="cd" style="color:#fcd34d;font-weight:800" data-t="${ms(s.releaseAt)}">${cdText(ms(s.releaseAt))}</span></div>` : ""}
       ${s.status === "paid" ? `<div class="row"><span>Paid out</span><span>${dt(s.paidAt)}</span></div>` : ""}
       ${btns ? `<div class="actions">${btns}</div>` : ""}</div>`;
@@ -564,11 +575,12 @@ function renderRecords() {
 function renderAdmin() {
   const held = sum(allSavings, s => s.status === "active" || s.status === "withdraw_requested");
   const owed = sum(allSavings, s => s.status === "withdraw_requested");
+  $("aActive").innerHTML = allSavings.filter(x => x.status === "active").sort((a, b) => ms(a.releaseAt) - ms(b.releaseAt)).map(x => `<div class="card"><div class="title">${esc(x.name)} · ${fmt(x.amount)}</div><div class="row"><span>Machine</span><span>${esc(x.planName)}</span></div><div class="row"><span>Commission day</span><span class="dayn" data-id="${x.id}">Day ${dayOf(x)} of ${x.lockDays}</span></div><div class="row"><span>Daily commission</span><span>${fmt(x.dailyAmount || 0)}</span></div><div class="row"><span>Commission earned</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${x.id}">${fmt(earnOf(x))}</span></div><div class="row"><span>To pay at release</span><span>${fmt(Number(x.amount) + Number(x.dailyAmount || 0) * Number(x.lockDays))}</span></div><div class="row"><span>Time left</span><span class="cd" data-t="${ms(x.releaseAt)}">${cdText(ms(x.releaseAt))}</span></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aHeld").textContent = fmt(held); $("aOwed").textContent = fmt(owed);
   $("aResets").innerHTML = resets.map(r => `<div class="card"><div class="title">${esc(r.name)}</div><div class="row"><span>Phone</span><span>+${esc(r.phone)}</span></div><div class="row"><span>Asked</span><span>${dt(r.at)}</span></div><div class="note" style="text-align:left;margin:8px 0">1. In Firebase open Authentication, then Users. 2. Find <b style="color:#fff">${esc(r.phone)}@ajx-savings.app</b>. 3. Tap the three dots, then Delete account. 4. Tap Done here and tell the member to register again with the same phone.</div><div class="actions"><button class="btn-small green" data-act="doneReset" data-id="${r.id}">Done</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aPending").innerHTML = users.filter(u => u.status === "pending").map(u => `<div class="card"><div class="title">${esc(u.name)}</div><div class="row"><span>Phone</span><span>+${esc(u.phone)}</span></div><div class="actions"><button class="btn-small green" data-act="approveUser" data-id="${u.id}">Approve</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div></div>`).join("") || `<div class="empty">None</div>`;
-  $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div>${s.provider ? `<div class="row"><span>Pays with</span><span>${esc(s.provider)} +${esc(s.payerPhone || "")}</span></div>` : ""}<div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
-  $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · pay ${fmt(payoutOf(s))}</div><div class="row"><span>Saved</span><span>${fmt(s.amount)}</span></div><div class="row"><span>Daily income earned</span><span>${fmt(earnOf(s))}</span></div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div>${dailyFor(s) ? `<div class="row"><span>Daily commission</span><span>${fmt(dailyFor(s))}</span></div>` : ""}${s.provider ? `<div class="row"><span>Pays with</span><span>${esc(s.provider)} +${esc(s.payerPhone || "")}</span></div>` : ""}<div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · pay ${fmt(payoutOf(s))}</div><div class="row"><span>Saved</span><span>${fmt(s.amount)}</span></div><div class="row"><span>Commission earned</span><span>${fmt(earnOf(s))}</span></div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aNums").innerHTML = adminNumCards(); $("aPlans").innerHTML = adminPlanCards(); $("mList").innerHTML = adminPlanCards();
   $("aMembers").innerHTML = users.filter(u => u.status === "approved").map(u => `<div class="card"><div class="row"><span><b style="color:#fff">${esc(u.name)}</b> ${u.role === "admin" ? '<span class="tag active">Admin</span>' : ""}</span><span>+${esc(u.phone)}</span></div>${u.id !== myUid ? `<div class="actions"><button class="btn-small grey" data-act="toggleAdmin" data-id="${u.id}">${u.role === "admin" ? "Remove admin" : "Make admin"}</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div>` : ""}</div>`).join("");
 }
@@ -587,7 +599,7 @@ async function action(act, id, el) {
     if (act === "startPlan") {
       const p = plans.find(x => x.id === id); if (!p) return;
       if (p.locked) return alert("This machine is locked right now.");
-      modal(`<h3>${esc(p.name)} ${tags(p)}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. ${PAYMENTS_ON ? "You will get a prompt on your phone to approve the payment with your mobile money PIN." : "After you pay the treasurer, the admin confirms."} Your ${p.lockDays} days begin once the money is confirmed. On the release date you can withdraw exactly what you saved.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><label>Pay with</label><div class="series-bar" id="provBar"><button type="button" class="series-chip on" data-prov="MTN">MTN MoMo</button><button type="button" class="series-chip" data-prov="AIRTEL">Airtel Money</button></div>${PAYMENTS_ON ? "" : `<div id="payTo"></div>`}<label>${PAYMENTS_ON ? "Mobile money number" : "Your number you will pay from"}</label><input id="mPhone" type="tel" inputmode="numeric" class="input-field plain" value="${esc(me.phone)}" placeholder="2567..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${PAYMENTS_ON ? "Pay now" : "Request this plan"}</button>`);
+      modal(`<h3>${esc(p.name)} ${tags(p)}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. ${PAYMENTS_ON ? "You will get a prompt on your phone to approve the payment with your mobile money PIN." : "After you pay the treasurer, the admin confirms."} Your ${p.lockDays} days begin once the money is confirmed. On the release date you can withdraw your savings plus the commission earned.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><label>Pay with</label><div class="series-bar" id="provBar"><button type="button" class="series-chip on" data-prov="MTN">MTN MoMo</button><button type="button" class="series-chip" data-prov="AIRTEL">Airtel Money</button></div>${PAYMENTS_ON ? "" : `<div id="payTo"></div>`}<label>${PAYMENTS_ON ? "Mobile money number" : "Your number you will pay from"}</label><input id="mPhone" type="tel" inputmode="numeric" class="input-field plain" value="${esc(me.phone)}" placeholder="2567..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${PAYMENTS_ON ? "Pay now" : "Request this plan"}</button>`);
       let prov = "MTN";
       const showPayTo = () => {
         if (!$("payTo")) return;
@@ -597,7 +609,7 @@ async function action(act, id, el) {
       showPayTo();
       if ($("payTo")) $("payTo").onclick = e => { const b = e.target.closest("[data-copy]"); if (b && navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; }); };
       $("provBar").onclick = e => { const b = e.target.closest("[data-prov]"); if (!b) return; prov = b.dataset.prov; document.querySelectorAll("#provBar .series-chip").forEach(c => c.classList.toggle("on", c === b)); showPayTo(); };
-      if (p.dailyAmount) { $("mAmt").insertAdjacentHTML("afterend", `<div class="note" id="mEst" style="text-align:left;margin:6px 0 0"></div>`); const est = () => { const a = Math.floor(Number($("mAmt").value)) || Number(p.minAmount), dly = Math.round(Number(p.dailyAmount) * a / Number(p.minAmount)); $("mEst").innerHTML = `Expected daily income: <b>${fmt(dly)}</b> &middot; after ${p.lockDays} days you receive about <b>${fmt(a + dly * Number(p.lockDays))}</b>`; }; $("mAmt").oninput = est; est(); }
+      if (p.dailyAmount) { $("mAmt").insertAdjacentHTML("afterend", `<div class="note" id="mEst" style="text-align:left;margin:6px 0 0"></div>`); const est = () => { const a = Math.floor(Number($("mAmt").value)) || Number(p.minAmount), dly = Math.round(Number(p.dailyAmount) * a / Number(p.minAmount)); $("mEst").innerHTML = `Daily commission: <b>${fmt(dly)}</b> &middot; after ${p.lockDays} days you receive about <b>${fmt(a + dly * Number(p.lockDays))}</b>`; }; $("mAmt").oninput = est; est(); }
       $("mGo").onclick = async () => {
         const a = Math.floor(Number($("mAmt").value));
         if (!a || a < Number(p.minAmount)) return $("mErr").textContent = "Minimum is " + fmt(p.minAmount);
@@ -630,7 +642,7 @@ async function action(act, id, el) {
         return modal(`<h3>Nothing to withdraw yet</h3><p class="note" style="text-align:left">Your savings can only be withdrawn on their release date.${nxt ? " Your next release is <b>" + dd(nxt) + "</b>." : ""}</p><button class="btn-submit" id="mGo">OK</button>`), $("mGo").onclick = closeModal;
       }
       const tot = rd.reduce((t, x) => t + payoutOf(x), 0);
-      if (confirm(`Request withdrawal of ${fmt(tot)} (savings plus daily income)? The admin will pay you out.`))
+      if (confirm(`Request withdrawal of ${fmt(tot)} (savings plus commission)? The admin will pay you out.`))
         for (const x of rd) await updateDoc(doc(db, "savings", x.id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() });
     }
     else if (act === "reqWithdraw") { if (confirm("Request your withdrawal now?")) await updateDoc(doc(db, "savings", id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() }); }
@@ -667,7 +679,7 @@ async function action(act, id, el) {
 }
 function openPlanForm(editId) {
   const ex = editId ? plans.find(x => x.id === editId) : null;
-  modal(`<h3>${ex ? "Edit machine" : "Add a machine"}</h3><label>Machine name</label><input id="pN" class="input-field plain" placeholder="e.g. Water Pump 1"><label>Machine type</label><select id="pT" class="input-field plain"><option>Water Pumps</option><option>Generators</option><option>Standard Mining Boxes</option><option value="__other">Other (write it yourself)</option></select><input id="pTo" class="input-field plain" placeholder="Write the machine type, e.g. Solar Panels" style="display:none;margin-top:8px"><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Number of days (countdown)</label><input id="pD" type="number" inputmode="numeric" class="input-field plain" placeholder="30"><label>Price / amount (${CURRENCY})</label><input id="pM" type="number" inputmode="numeric" class="input-field plain" placeholder="50000"><label>Expected daily income (${CURRENCY}, added every day)</label><input id="pDa" type="number" inputmode="numeric" class="input-field plain" placeholder="1500"><label>Machine photo</label><button type="button" class="btn-small grey" id="pPick" style="width:100%;padding:12px">Choose photo from gallery</button><img id="pPrev" class="mimg sm" alt="" style="display:none;margin-top:10px"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${ex ? "Save changes" : "Save machine"}</button>`);
+  modal(`<h3>${ex ? "Edit machine" : "Add a machine"}</h3><label>Machine name</label><input id="pN" class="input-field plain" placeholder="e.g. Water Pump 1"><label>Machine type</label><select id="pT" class="input-field plain"><option>Water Pumps</option><option>Generators</option><option>Standard Mining Boxes</option><option value="__other">Other (write it yourself)</option></select><input id="pTo" class="input-field plain" placeholder="Write the machine type, e.g. Solar Panels" style="display:none;margin-top:8px"><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Number of days (countdown)</label><input id="pD" type="number" inputmode="numeric" class="input-field plain" placeholder="30"><label>Price / amount (${CURRENCY})</label><input id="pM" type="number" inputmode="numeric" class="input-field plain" placeholder="50000"><label>Daily commission (${CURRENCY}, added every day)</label><input id="pDa" type="number" inputmode="numeric" class="input-field plain" placeholder="1500"><label>Machine photo</label><button type="button" class="btn-small grey" id="pPick" style="width:100%;padding:12px">Choose photo from gallery</button><img id="pPrev" class="mimg sm" alt="" style="display:none;margin-top:10px"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${ex ? "Save changes" : "Save machine"}</button>`);
   let pImg = "";
   $("pT").onchange = () => { $("pTo").style.display = $("pT").value === "__other" ? "block" : "none"; };
   if (ex) {
