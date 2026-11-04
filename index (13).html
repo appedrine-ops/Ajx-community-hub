@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#030712">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<title>AJX Savings Hub</title>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"></noscript>
+<style>
+:root{--bg-black:#030712;--card-bg:#111827;--border-color:#1f293d;--accent-cyan:#38bdf8;--accent-yellow:#facc15;--accent-red:#ef4444;--accent-emerald:#10b981;--text-muted:#94a3b8}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Times New Roman',Times,serif,Georgia,-apple-system,sans-serif}
+body{background:var(--bg-black);color:#fff;overflow-x:hidden}
+#waveCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none}
+.container{position:relative;z-index:2;max-width:480px;margin:0 auto;min-height:100vh;padding:16px 16px 90px}
+.view-page{display:none}.view-page.active{display:block}
+.auth-container{display:flex;flex-direction:column;justify-content:center;min-height:88vh;text-align:center;gap:18px}
+.auth-title{font-size:2.5rem;font-weight:900;margin-bottom:14px;text-shadow:0 0 20px var(--accent-cyan)}
+.auth-subtitle{font-size:1.05rem;color:var(--text-muted)}
+.input-group{position:relative;margin-bottom:18px}
+.input-group i.left-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:1.25rem;z-index:2}
+.input-group i.right-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:1.2rem;cursor:pointer;z-index:2}
+.input-field{width:100%;background:rgba(0,0,0,.45);border:1px solid #334155;border-radius:14px;padding:16px 16px 16px 52px;color:#fff;font-size:1.05rem;outline:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.6)}
+.input-field.plain{padding-left:16px}
+.input-field:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 4px rgba(56,189,248,.25)}
+.btn-submit{width:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border:none;color:#fff;padding:15px;border-radius:12px;font-size:1.15rem;font-weight:700;cursor:pointer;box-shadow:0 8px 25px rgba(56,189,248,.4);text-transform:uppercase;letter-spacing:1px}
+.btn-submit:active{transform:scale(.97)}
+.btn-small{background:#1d4ed8;border:none;color:#fff;padding:8px 14px;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer}
+.btn-small.green{background:#059669}.btn-small.red{background:#b91c1c}.btn-small.grey{background:#334155}
+.auth-footer{display:flex;justify-content:space-between;margin-top:14px;font-size:.95rem}
+.auth-footer a{color:#fff;text-decoration:none;display:flex;align-items:center;gap:6px;cursor:pointer}
+.err{color:#fca5a5;font-size:.95rem;min-height:20px;margin-bottom:8px}
+.dash-header{display:flex;justify-content:space-between;align-items:center;padding:14px 0 18px;border-bottom:2px solid #1e40af;margin-bottom:18px}
+.dash-brand{font-size:1.8rem;font-weight:900;text-shadow:0 0 15px var(--accent-cyan)}
+.dash-msg-btn{display:flex;flex-direction:column;align-items:center;cursor:pointer;font-size:.8rem}
+.dash-msg-btn i{font-size:1.5rem;margin-bottom:3px}
+.hero-banner{border-radius:16px;padding:20px;margin-bottom:20px;background:linear-gradient(135deg,#0c4a6e,#1e3a8a);border:1px solid var(--accent-cyan);box-shadow:0 12px 35px rgba(0,0,0,.6)}
+.hero-banner b{color:var(--accent-yellow)}
+.hero-banner p{color:#e0f2fe;line-height:1.4;font-size:1.02rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.stat-card{background:#111827;border-radius:14px;overflow:hidden;text-align:center;border:1.5px solid #334155;box-shadow:0 4px 15px rgba(0,0,0,.4)}
+.stat-val{padding:14px 6px;font-size:1.2rem;font-weight:900;line-height:1.1;word-break:break-word}
+.stat-label{background:#1e2937;color:var(--accent-cyan);padding:7px 4px;font-size:.78rem;font-weight:600;text-transform:uppercase}
+.message-panel{background:#0a0f1c;border:2px solid var(--accent-cyan);border-radius:16px;padding:16px;margin-bottom:22px}
+.message-header{display:flex;justify-content:space-between;border-bottom:1.5px solid #334155;padding-bottom:10px;margin-bottom:10px}
+.message-title{font-size:1.25rem;font-weight:700}
+.msg-item{padding:10px 0;font-size:1rem;border-bottom:1px solid #334155;color:var(--accent-cyan)}
+.msg-item:last-child{border-bottom:none}
+.msg-item small{display:block;color:var(--text-muted);margin-top:3px}
+h2.t{text-align:center;margin:8px 0 14px}
+.card{background:rgba(17,24,39,.9);border:1.5px solid var(--border-color);border-radius:14px;padding:16px;margin-bottom:14px}
+.card .title{font-size:1.08rem;font-weight:700;color:var(--accent-cyan);margin-bottom:6px}
+.card .row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:.95rem}
+.card .row span:first-child{color:var(--text-muted)}
+.card .actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;background:#334155}
+.tag.awaiting{background:#92400e}.tag.active{background:#065f46}.tag.ready{background:#1d4ed8}.tag.paid{background:#475569}.tag.cancelled,.tag.withdraw_requested{background:#7c2d12}
+.empty{text-align:center;color:var(--text-muted);padding:22px 8px}
+.note{color:var(--text-muted);font-size:.85rem;text-align:center;margin:10px 0 18px;line-height:1.4}
+.raffle-wheel-box{border:1px solid var(--border-color);border-radius:12px;padding:18px;text-align:center}
+.wheel-container{position:relative;width:230px;height:230px;margin:18px auto;border-radius:50%;border:8px solid var(--accent-yellow);overflow:hidden;box-shadow:0 0 30px rgba(250,204,21,.4)}
+.wheel-pointer{width:0;height:0;margin:0 auto -14px;border-left:16px solid transparent;border-right:16px solid transparent;border-top:24px solid var(--accent-red);position:relative;z-index:5}
+.wheel-disc{width:100%;height:100%;border-radius:50%;background:conic-gradient(#ef4444 0 60deg,#facc15 60deg 120deg,#10b981 120deg 180deg,#38bdf8 180deg 240deg,#8b5cf6 240deg 300deg,#ec4899 300deg 360deg);transition:transform 5s cubic-bezier(.25,.1,.25,1)}
+.btn-spin{background:linear-gradient(90deg,var(--accent-yellow),#eab308);color:#000;font-weight:800;border:none;padding:13px 38px;border-radius:30px;font-size:1.15rem;cursor:pointer;margin-top:10px}
+.chat-box{height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px 2px}
+.bubble{max-width:82%;padding:9px 13px;border-radius:14px;background:#1e293b;font-size:.98rem;align-self:flex-start;word-wrap:break-word}
+.bubble.me{background:#1d4ed8;align-self:flex-end}
+.bubble small{display:block;color:#93c5fd;font-size:.74rem;margin-bottom:2px}
+.chat-send{display:flex;gap:8px;margin-top:10px}
+.chat-send input{flex:1}
+.my-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.my-user-title{color:var(--accent-cyan);font-size:1.1rem;font-weight:bold}
+.my-user-phone{margin-top:4px;display:flex;gap:8px;align-items:center}
+.my-user-badge{background:rgba(255,255,255,.1);padding:2px 8px;border-radius:10px;font-size:.75rem;color:var(--text-muted)}
+.my-avatar-ring{width:52px;height:52px;border-radius:50%;border:2px solid var(--accent-cyan);display:flex;justify-content:center;align-items:center;font-size:1.3rem;color:var(--accent-cyan)}
+.my-wallet-card{background:rgba(17,24,39,.9);border:1px solid var(--accent-cyan);border-radius:16px;padding:18px;margin-bottom:18px}
+.my-wallet-grid{display:flex;justify-content:space-around;text-align:center}
+.my-wallet-label{font-size:.85rem;display:block;margin-bottom:5px}
+.my-wallet-val{font-size:1.35rem;font-weight:bold}
+.my-menu-box{background:rgba(17,24,39,.9);border:1px solid var(--accent-cyan);border-radius:16px;padding:18px 8px;margin-bottom:18px}
+.my-menu-grid{display:grid;grid-template-columns:repeat(4,1fr);row-gap:18px;text-align:center}
+.my-menu-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+.my-icon-btn{width:48px;height:48px;background:#1d4ed8;border-radius:12px;display:flex;justify-content:center;align-items:center;font-size:1.2rem}
+.my-menu-label{font-size:.78rem}
+.navbar{position:fixed;bottom:0;left:0;width:100%;background:#0a0f1c;border-top:3px solid #1e40af;display:flex;justify-content:space-around;padding:6px 0;z-index:100}
+.nav-item{display:flex;flex-direction:column;align-items:center;font-size:.72rem;cursor:pointer;padding:5px 8px;color:#fff}
+.nav-item i{font-size:1.3rem;margin-bottom:3px}
+.nav-item.active,.nav-item.active i{color:var(--accent-cyan)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;padding:18px}
+.modal.open{display:flex}
+.modal-box{background:#0f172a;border:1.5px solid var(--accent-cyan);border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal-box h3{margin-bottom:12px;color:var(--accent-cyan)}
+.modal-box label{display:block;margin:10px 0 5px;color:var(--text-muted);font-size:.9rem}
+.series-bar{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;margin-bottom:6px;-webkit-overflow-scrolling:touch}.series-bar::-webkit-scrollbar{display:none}.series-chip{flex:0 0 auto;padding:8px 16px;border-radius:20px;border:1px solid #334155;background:transparent;color:#94a3b8;font-size:.95rem;font-weight:700;cursor:pointer;white-space:nowrap}.series-chip.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.dep-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}.dep-back{width:40px;height:40px;border-radius:50%;background:#0f172a;border:1px solid #1e293b;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.dep-hero{background:linear-gradient(135deg,#1d4ed8,#0e7490);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(29,78,216,.25)}.dep-hero small{display:block;color:#bfdbfe;font-size:.85rem}.dep-hero b{display:block;color:#fff;font-size:1.7rem;margin:2px 0 12px}.dep-hero .two{display:flex;gap:10px}.dep-hero .two div{flex:1;background:rgba(2,6,23,.28);border-radius:12px;padding:10px}.dep-hero .two b{font-size:1.05rem;margin:0}
+.dep-steps{display:flex;gap:8px;margin-bottom:6px}.dep-step{flex:1;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:12px 8px;text-align:center;font-size:.8rem;color:#94a3b8}.dep-step i{display:flex;width:32px;height:32px;margin:0 auto 6px;border-radius:50%;background:#1e3a8a;color:#93c5fd;align-items:center;justify-content:center}
+.dep-card{background:#0b1220;border:1px solid #1e293b;border-radius:16px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:center}.dep-ico{width:46px;height:46px;border-radius:13px;background:#1e3a8a;color:#93c5fd;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:0 0 auto}.dep-info{flex:1;min-width:0}.dep-info .n{color:#fff;font-weight:700;font-size:1.02rem}.dep-info .m{color:#94a3b8;font-size:.85rem;margin-top:3px}.dep-card .btn-small{flex:0 0 auto}
+.bal-card{background:linear-gradient(135deg,#1d4ed8,#0e7490);border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(29,78,216,.25)}.bal-card small{display:block;color:#bfdbfe;font-size:.85rem}.bal-total{color:#fff;font-size:2rem;font-weight:800;margin:2px 0 12px}.bal-row{display:flex;gap:8px;margin-bottom:14px}.bal-row div{flex:1;background:rgba(2,6,23,.28);border-radius:12px;padding:8px 10px}.bal-row b{display:block;color:#fff;font-size:.98rem}.bal-btns{display:flex;gap:10px}.bal-btns button{flex:1;padding:12px;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer}.bal-dep{background:#fff;color:#1d4ed8}.bal-wd{background:#065f46;color:#fff}
+.mimg{display:block;width:100%;height:170px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#0f172a}.mimg.sm{height:110px}.dep-img{width:56px;height:56px;border-radius:13px;object-fit:cover;flex:0 0 auto;background:#0f172a}
+.mwrap{position:relative;margin-bottom:10px}.mwrap .mimg{margin:0}.mprice{position:absolute;left:10px;bottom:10px;background:rgba(2,6,23,.82);color:#fff;font-weight:800;padding:6px 12px;border-radius:10px;font-size:.95rem}.mprice.mdur{left:auto;right:10px;background:rgba(29,78,216,.9)}.mlock{position:absolute;inset:0;border-radius:12px;background:rgba(2,6,23,.62);display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-weight:800;font-size:1.1rem}.cd{font-variant-numeric:tabular-nums}
+#backBar{position:sticky;top:0;z-index:20;padding:8px 0;margin-bottom:12px;background:rgba(3,7,18,.94)}#backBtn{display:inline-flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #1e3a8a;color:#93c5fd;border-radius:22px;padding:9px 18px;font-size:1rem;font-weight:700;cursor:pointer}
+.msgrow{display:flex;gap:8px;align-items:flex-end}.msgrow.me{flex-direction:row-reverse}.msgrow .bubble{align-self:auto}.av{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#1e3a8a;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:2px solid #38bdf8}
+.sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
+</style>
+</head>
+<body>
+<canvas id="waveCanvas"></canvas>
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginPage" class="view-page active"><div class="auth-container">
+  <h1 class="auth-title">AJX Savings Hub</h1>
+  <div class="auth-subtitle">Save together and earn a daily commission.</div><div class="note" data-ver style="text-align:center;font-size:.8rem"></div>
+  <form id="loginForm">
+    <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="lPhone" class="input-field" placeholder="Phone Number" required></div>
+    <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="lPass" class="input-field" placeholder="Password" required><i class="fa-solid fa-eye-slash right-icon" data-eye="lPass"></i></div>
+    <div id="lMsg" style="color:#6ee7b7;font-size:.98rem;margin-bottom:10px;line-height:1.35"></div><div class="err" id="lErr"></div>
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#94a3b8;font-size:.9rem"><input type="checkbox" id="lKeep" style="width:18px;height:18px"> Keep me signed in on this phone</label>
+    <button type="submit" class="btn-submit" id="lBtn">Login</button>
+    <div class="auth-footer"><a data-go="registerPage"><i class="fa-solid fa-angle-left"></i> Register</a><a id="forgot">Forgot your password?</a></div>
+  </form>
+</div></div>
+
+<!-- REGISTER -->
+<div id="registerPage" class="view-page"><div class="auth-container">
+  <h1 class="auth-title">Join the group</h1>
+  <div class="auth-subtitle">An administrator approves every member</div>
+  <form id="regForm">
+    <div class="input-group"><i class="fa-solid fa-user left-icon"></i><input type="text" id="rName" class="input-field" placeholder="Full name (at least two names)" required></div>
+    <div class="input-group"><i class="fa-solid fa-mobile-screen left-icon"></i><input type="tel" id="rPhone" class="input-field" placeholder="Phone Number" required></div>
+    <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="rPass" class="input-field" placeholder="Set Password (6+ characters)" required></div>
+    <div class="input-group"><i class="fa-solid fa-key left-icon"></i><input type="password" id="rPass2" class="input-field" placeholder="Confirm Password" required></div>
+    <div class="err" id="rErr"></div>
+    <button type="submit" class="btn-submit">Register</button>
+    <div class="auth-footer" style="justify-content:flex-start"><a data-go="loginPage"><i class="fa-solid fa-angle-left"></i> Login</a></div>
+  </form>
+</div></div>
+
+<!-- PENDING -->
+<div id="pendingPage" class="view-page"><div class="auth-container">
+  <h1 class="auth-title" style="font-size:1.8rem">Waiting for approval</h1>
+  <div class="auth-subtitle">Your registration was received. An administrator must approve you before you can use the group.</div>
+  <div class="err" id="pErr" style="color:#fcd34d"></div><button class="btn-submit" id="recheck">Check again</button>
+  <button class="btn-submit" style="background:#334155;box-shadow:none" data-signout>Sign out</button>
+</div></div>
+
+<!-- DASHBOARD -->
+<div id="dashContainer" class="view-page">
+  <div id="backBar" style="display:none"><button id="backBtn" type="button"><i class="fa-solid fa-arrow-left"></i> Back</button></div>
+
+  <div id="tabHome" class="tab-content">
+    <div class="dash-header"><div class="dash-brand">AJX Savings</div><div class="dash-msg-btn" data-tab="tabNotices"><i class="fa-regular fa-bell"></i><span>Notices</span></div></div>
+    <div class="bal-card"><small>Total savings with the group</small><div class="bal-total" id="bTotal">0</div>
+      <div class="bal-row"><div><small>Locked</small><b id="bLocked">0</b></div><div><small>Ready</small><b id="bReady">0</b></div><div><small>Payout pending</small><b id="bPend">0</b></div></div>
+      <small style="margin:-4px 0 10px">Next release in <b class="cd" id="bNext" data-t="0">-</b></small>
+      <small style="margin:-4px 0 10px">Commission earned <b id="bEarn">0</b> &middot; Commission per day <b id="bDaily">0</b></small>
+      <div class="bal-btns"><button class="bal-dep" data-tab="tabDeposit"><i class="fa-solid fa-plus"></i> Deposit</button><button class="bal-wd" data-act="withdrawAll"><i class="fa-solid fa-hand-holding-dollar"></i> Withdraw</button></div></div>
+    <div class="hero-banner"><p>Your savings are held by the group. On the release date you receive <b>your savings plus the daily commission</b> shown on your machine.</p></div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-val" id="hSaved">0</div><div class="stat-label">Locked savings</div></div>
+      <div class="stat-card"><div class="stat-val" id="hReady">0</div><div class="stat-label">Ready to withdraw</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-val" id="hAwait">0</div><div class="stat-label">Awaiting confirmation</div></div>
+      <div class="stat-card"><div class="stat-val" id="hPaid">0</div><div class="stat-label">Withdrawn so far</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-val" id="hEarn">0</div><div class="stat-label">Commission earned</div></div>
+      <div class="stat-card"><div class="stat-val" id="hDaily">0</div><div class="stat-label">Commission per day</div></div>
+    </div>
+    <div class="grid-3">
+      <div class="stat-card"><div class="stat-val" id="hPlans">0</div><div class="stat-label">My plans</div></div>
+      <div class="stat-card"><div class="stat-val" id="hNext" style="font-size:.95rem">-</div><div class="stat-label">Next release</div></div>
+      <div class="stat-card"><div class="stat-val" id="hMembers">0</div><div class="stat-label">Members</div></div>
+    </div>
+    <div class="message-panel"><div class="message-header"><span class="message-title">Notices</span><span class="msg-more" data-tab="tabNotices" style="color:#67e8f9;text-decoration:underline;cursor:pointer;font-size:.9rem">More</span></div><div id="homeNotices"></div></div>
+  </div>
+
+  <div id="tabNotices" class="tab-content" style="display:none"><h2 class="t">Notices</h2><div id="noticeList"></div></div>
+
+  <div id="tabRaffle" class="tab-content" style="display:none">
+    <h2 class="t">Group Raffle</h2>
+    <div class="raffle-wheel-box">
+      <p style="color:var(--accent-cyan)">Fun raffles run by the admin. Nothing is paid to enter.</p>
+      <div class="wheel-container-wrap"><div class="wheel-pointer"></div><div class="wheel-container"><div class="wheel-disc" id="wheelDisc"></div></div></div>
+      <p id="raffleInfo" style="color:#fff;font-weight:700"></p>
+      <div id="drawAdmin" style="display:none;text-align:left"><label>Start amount (lowest prize, UGX)</label><input class="input-field plain" id="rfMin" type="number" inputmode="numeric" placeholder="5000"><label>Final amount (highest prize, UGX)</label><input class="input-field plain" id="rfMax" type="number" inputmode="numeric" placeholder="50000"><button class="btn-small" id="rfSave" style="margin:8px 0 12px">Save raffle amounts</button><input class="input-field plain" id="drawPrize" placeholder="Prize note (optional)" style="margin-bottom:8px"><button class="btn-spin" id="spinBtn">SPIN THE RAFFLE</button></div>
+      <p id="raffleResult" style="margin-top:14px;font-weight:bold;color:var(--accent-yellow)"></p>
+    </div>
+    <div class="sec">Past raffles</div><div id="drawList"></div>
+  </div>
+
+  <div id="tabChats" class="tab-content" style="display:none">
+    <h2 class="t">Group chat</h2>
+    <div class="chat-box" id="chatBox"></div>
+    <p class="note" id="chatReadOnly" style="display:none">Only the admin posts here. You can read the messages.</p>
+    <form class="chat-send" id="chatForm"><input class="input-field plain" id="chatText" placeholder="Write a message" autocomplete="off"><button class="btn-small" style="padding:0 18px"><i class="fa-solid fa-paper-plane"></i></button></form>
+  </div>
+
+  <div id="tabPlans" class="tab-content" style="display:none">
+    <h2 class="t">Savings plans</h2>
+    <div class="series-bar" id="seriesBar"></div>
+    <div class="series-bar" id="machBar"></div>
+    <p class="note">Pick a plan, choose how much you will save, then pay the group treasurer. Your plan starts when the admin confirms your payment.</p>
+    <div id="planList"></div>
+  </div>
+
+  <div id="tabDeposit" class="tab-content" style="display:none">
+    <div class="dep-top"><h2 class="t" style="margin:0">Deposit</h2></div>
+    <div class="dep-hero"><small>Locked savings</small><b id="dLocked">0</b><div class="two"><div><small>Waiting for admin</small><b id="dAwait">0</b></div><div><small>Ready to withdraw</small><b id="dReady">0</b></div></div></div>
+    <div class="dep-steps"><div class="dep-step"><i class="fa-solid fa-list-check"></i>1. Choose a plan</div><div class="dep-step"><i class="fa-solid fa-hand-holding-dollar"></i>2. Pay the treasurer</div><div class="dep-step"><i class="fa-solid fa-circle-check"></i>3. Admin confirms</div></div>
+    <div class="sec">Choose a plan</div>
+    <div class="series-bar" id="depBar"></div>
+    <div class="series-bar" id="depMach"></div>
+    <div id="depList"></div>
+    <div class="sec">Waiting for confirmation</div>
+    <div id="depAwait"></div>
+  </div>
+
+  <div id="tabRecords" class="tab-content" style="display:none"><h2 class="t">My records</h2><div id="recordList"></div></div>
+
+  <div id="tabMy" class="tab-content" style="display:none">
+    <div class="my-header-row"><div><div class="my-user-title" id="myName">-</div><div class="my-user-phone"><span id="myPhone"></span><span class="my-user-badge" id="myRole">Member</span></div></div><div class="my-avatar-ring"><i class="fa-solid fa-sun"></i></div></div>
+    <div class="my-wallet-card"><div class="my-wallet-grid"><div><span class="my-wallet-label">Locked</span><span class="my-wallet-val" id="mLocked">0</span></div><div><span class="my-wallet-label">Ready</span><span class="my-wallet-val" id="mReady">0</span></div></div></div>
+    <div class="my-menu-box"><div class="my-menu-grid">
+      <div class="my-menu-item" data-tab="tabDeposit"><div class="my-icon-btn"><i class="fa-solid fa-wallet"></i></div><span class="my-menu-label">Deposit</span></div>
+      <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-hand-holding-dollar"></i></div><span class="my-menu-label">Withdraw</span></div>
+      <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-credit-card"></i></div><span class="my-menu-label">Bill</span></div>
+      <div class="my-menu-item" data-tab="tabNotices"><div class="my-icon-btn"><i class="fa-regular fa-bell"></i></div><span class="my-menu-label">Notices</span></div>
+      <div class="my-menu-item" data-tab="tabChats"><div class="my-icon-btn"><i class="fa-solid fa-users"></i></div><span class="my-menu-label">Group</span></div>
+      <div class="my-menu-item" data-tab="tabRaffle"><div class="my-icon-btn"><i class="fa-solid fa-dharmachakra"></i></div><span class="my-menu-label">Raffle</span></div>
+      <div class="my-menu-item" id="shareBtn"><div class="my-icon-btn"><i class="fa-solid fa-share-nodes"></i></div><span class="my-menu-label">Share</span></div>
+      <div class="my-menu-item" id="installBtn"><div class="my-icon-btn"><i class="fa-solid fa-download"></i></div><span class="my-menu-label">Download App</span></div>
+      <div class="my-menu-item" id="supportBtn"><div class="my-icon-btn"><i class="fa-solid fa-headset"></i></div><span class="my-menu-label">Admin</span></div>
+      <div class="my-menu-item adminOnly" data-act="setAvatar" style="display:none"><div class="my-icon-btn" style="background:#b45309"><i class="fa-solid fa-camera"></i></div><span class="my-menu-label">My photo</span></div>
+      <div class="my-menu-item" data-act="changePw"><div class="my-icon-btn"><i class="fa-solid fa-key"></i></div><span class="my-menu-label">Password</span></div>
+      <div class="my-menu-item" data-signout><div class="my-icon-btn"><i class="fa-solid fa-right-from-bracket"></i></div><span class="my-menu-label">Sign out</span></div>
+      <div class="my-menu-item adminOnly" data-tab="tabAdmin" style="display:none"><div class="my-icon-btn" style="background:#b45309"><i class="fa-solid fa-user-shield"></i></div><span class="my-menu-label">Admin panel</span></div>
+      <div class="my-menu-item adminOnly" data-tab="tabMachines" style="display:none"><div class="my-icon-btn" style="background:#b45309"><i class="fa-solid fa-gears"></i></div><span class="my-menu-label">Machines</span></div>
+    </div></div>
+  </div>
+
+  <div id="tabMachines" class="tab-content" style="display:none">
+    <div class="dep-top"><h2 class="t" style="margin:0">Machines</h2></div>
+    <p class="note" style="text-align:left">Add a machine with its photo, price and number of days. Members see it on the Deposit screen. Lock stops deposits, Hide removes it from members, Edit changes the price or days.</p>
+    <button class="btn-submit" id="mAddBtn" style="margin-bottom:14px"><i class="fa-solid fa-plus"></i> Add machine</button>
+    <div id="mList"></div>
+  </div>
+
+  <div id="tabAdmin" class="tab-content" style="display:none">
+    <h2 class="t">Admin panel</h2>
+    <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aHeld">0</div><div class="stat-label">Held by group</div></div><div class="stat-card"><div class="stat-val" id="aOwed">0</div><div class="stat-label">Withdrawals due</div></div></div>
+    <div class="card"><div class="title">New member sign-up</div><p class="note" id="autoNote" style="text-align:left"></p><div class="series-bar" style="padding-bottom:0;margin:0"><button class="series-chip" id="modeAuto" data-act="setMode" data-id="auto">Auto register</button><button class="series-chip" id="modeWait" data-act="setMode" data-id="wait">Wait for my approval</button></div><div class="actions" style="margin-top:10px"><button class="btn-small grey" data-act="checkSetup">Check app setup</button></div><div class="note" data-ver style="text-align:left;font-size:.8rem"></div></div>
+    <div class="card"><div class="title">Support phone for members</div><p class="note" style="text-align:left">Members tap the Admin icon on My to call or WhatsApp this number.</p><input class="input-field plain" id="scPhone" type="tel" inputmode="numeric" placeholder="0772123456"><div class="actions"><button class="btn-small" data-act="saveSupport">Save</button></div></div>
+    <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aEarn">0</div><div class="stat-label">Commission earned (all)</div></div><div class="stat-card"><div class="stat-val" id="aDay">0</div><div class="stat-label">Commission per day (all)</div></div></div>
+    <div class="sec">Password reset requests</div><div id="aResets"></div>
+    <div class="sec">Members waiting for approval</div><div id="aPending"></div>
+    <div class="sec">Deposits to confirm (money received?)</div><div id="aDeposits"></div>
+    <div class="sec">Active deposits &amp; daily commission</div><div id="aActive"></div>
+    <div class="sec">Withdrawals to pay out</div><div id="aWithdraws"></div>
+    <div class="sec">Plans</div><div id="aPlans"></div><button class="btn-small" id="addPlanBtn">+ Add plan</button>
+    <div class="sec">Payment numbers (where members send money)</div><div id="aNums"></div><button class="btn-small" id="addNumBtn">+ Add number</button>
+    <div class="sec">Post a notice</div><textarea id="noticeText" class="input-field plain" rows="3" placeholder="Write a notice for all members"></textarea><button class="btn-small" id="postNotice" style="margin-top:8px">Post notice</button>
+    <div class="sec">All members</div><div id="aMembers"></div>
+    <p class="note">Rule: confirm a deposit only after the money has really reached the group (cash or mobile money). Pay a withdrawal only on or after its release date.</p>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item active" data-tab="tabHome"><i class="fa-solid fa-database"></i><span>Home</span></div>
+    <div class="nav-item" data-tab="tabRaffle"><i class="fa-solid fa-border-all"></i><span>Raffle</span></div>
+    <div class="nav-item" data-tab="tabChats"><i class="fa-regular fa-comments"></i><span>Chats</span></div>
+    <div class="nav-item" data-tab="tabPlans"><i class="fa-solid fa-piggy-bank"></i><span>Plans</span></div>
+    <div class="nav-item" data-tab="tabRecords"><i class="fa-solid fa-clock-rotate-left"></i><span>Records</span></div>
+    <div class="nav-item" data-tab="tabMy"><i class="fa-regular fa-user"></i><span>My</span></div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeAuth, inMemoryPersistence, browserLocalPersistence, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, getDoc, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// ====== PASTE YOUR NEW FIREBASE PROJECT CONFIG HERE ======
+const firebaseConfig = {
+  apiKey: "AIzaSyD0Fnh2wWdPlq1Tf3DAZlCy3O4Z-rwgi20",
+  authDomain: "ajx-savings.firebaseapp.com",
+  projectId: "ajx-savings",
+  storageBucket: "ajx-savings.firebasestorage.app",
+  messagingSenderId: "59046931916",
+  appId: "1:59046931916:web:19fa5271f5a440470dc169"
+};
+const CURRENCY = "UGX";
+const MAIL_DOMAIN = "@ajx-savings.app";
+
+const app = initializeApp(firebaseConfig);
+const auth = initializeAuth(app, { persistence: browserLocalPersistence }); // stays signed in only if "Keep me signed in" was ticked
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); } // saved copy on the phone = faster opening
+catch (e) { db = getFirestore(app); }
+// Mobile money: set to true AFTER you deploy the functions folder (see DEPLOY-PAYMENTS.md)
+const PAYMENTS_ON = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => CURRENCY + " " + Math.round(Number(n) || 0).toLocaleString("en-US");
+const ms = t => (t && t.toMillis) ? t.toMillis() : (t ? +new Date(t) : 0);
+const dt = t => ms(t) ? new Date(ms(t)).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "-";
+const dd = t => ms(t) ? new Date(ms(t)).toLocaleDateString([], { dateStyle: "medium" }) : "-";
+const normPhone = p => { let d = String(p).replace(/\D/g, ""); if (d.length === 10 && d[0] === "0") d = "256" + d.slice(1); return d; };
+const mailOf = p => normPhone(p) + MAIL_DOMAIN;
+const APP_VERSION = "2026-11-03 d";
+document.querySelectorAll("[data-ver]").forEach(e => { e.textContent = "Version " + APP_VERSION; });
+const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
+
+let me = null, myUid = null, isAdmin = false;
+let payNums = {}, general = {}, avatars = {}, raffleCfg = {};
+let resets = [], mySavings = [], allSavings = [], plans = [], users = [], notices = [], messages = [], draws = [];
+let unsubs = [];
+
+// ---------- view helpers ----------
+function show(id) { document.querySelectorAll(".view-page").forEach(p => p.classList.remove("active")); $(id).classList.add("active"); }
+let curTab = "tabHome";
+function openTab(id, noPush) {
+  document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
+  $(id).style.display = "block";
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.tab === id || (n.dataset.tab === "tabMy" && (id === "tabAdmin" || id === "tabMachines"))));
+  window.scrollTo(0, 0);
+  if (id === "tabChats") scrollChat();
+  if (!noPush && id !== curTab) history.pushState({ tab: id, d: ((history.state && history.state.d) || 0) + 1 }, "");
+  curTab = id;
+  renderAllNow();
+  $("backBar").style.display = id === "tabHome" ? "none" : "block";
+}
+window.addEventListener("popstate", e => {
+  if (!$("dashContainer").classList.contains("active")) return;
+  openTab(e.state && e.state.tab && $(e.state.tab) ? e.state.tab : "tabHome", true);
+});
+$("backBtn").addEventListener("click", () => { if (history.state && history.state.d > 0) history.back(); else openTab("tabHome"); });
+function modal(html) { $("modalBox").innerHTML = html; $("modal").classList.add("open"); }
+function closeModal() { $("modal").classList.remove("open"); }
+$("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-tab],[data-go],[data-eye],[data-signout],[data-act]");
+  if (!t) return;
+  if (t.dataset.tab) return openTab(t.dataset.tab);
+  if (t.dataset.go) return show(t.dataset.go);
+  if (t.dataset.eye) { const f = $(t.dataset.eye); f.type = f.type === "password" ? "text" : "password"; return; }
+  if (t.hasAttribute("data-signout")) { await signOut(auth); return; }
+  if (t.dataset.act) await action(t.dataset.act, t.dataset.id, t);
+});
+
+// ---------- auth ----------
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault(); $("lErr").textContent = ""; $("lMsg").textContent = "";
+  const btn = $("lBtn"); btn.disabled = true; btn.textContent = "Signing in...";
+  try {
+    try { localStorage.setItem("ajx_keep", $("lKeep").checked ? "1" : "0"); } catch (e) { }
+    sessionLogin = true;
+    await setPersistence(auth, $("lKeep").checked ? browserLocalPersistence : inMemoryPersistence);
+    await signInWithEmailAndPassword(auth, mailOf($("lPhone").value), $("lPass").value);
+  }
+  catch (err) { sessionLogin = false; $("lErr").textContent = authMsg(err); }
+  btn.disabled = false; btn.textContent = "Login";
+});
+let registering = false;
+$("regForm").addEventListener("submit", async e => {
+  e.preventDefault(); $("rErr").textContent = "";
+  const name = $("rName").value.trim().replace(/\s+/g, " "), phone = normPhone($("rPhone").value), p1 = $("rPass").value;
+  if (name.split(" ").length < 2 || name.split(" ").some(w => w.length < 2)) return $("rErr").textContent = "Enter your full name: at least two names (e.g. Dickson Mukasa).";
+  if (phone.length < 9) return $("rErr").textContent = "Enter a valid phone number.";
+  if (p1.length < 6) return $("rErr").textContent = "Password must be at least 6 characters.";
+  if (p1 !== $("rPass2").value) return $("rErr").textContent = "Passwords do not match.";
+  registering = true;
+  try {
+    let cred;
+    try { cred = await createUserWithEmailAndPassword(auth, mailOf(phone), p1); }
+    catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        try { cred = await signInWithEmailAndPassword(auth, mailOf(phone), p1); }
+        catch (e2) { throw { code: "x", message: "This phone number is already registered. Go to Login, or use Forgot password." }; }
+      } else throw err;
+    }
+    const ref = doc(db, "users", cred.user.uid);
+    const ex = await getDoc(ref).catch(() => null);
+    if (ex && ex.exists()) { await signOut(auth); registering = false; show("loginPage"); $("lPhone").value = phone; $("lErr").textContent = "This phone number is already registered. Please log in."; return; }
+    let auto = false;
+    try { const g = await getDoc(doc(db, "settings", "general")); auto = g.exists() && g.data().autoApprove === true; } catch (e) { }
+    await setDoc(ref, { name, phone, role: "member", status: auto ? "approved" : "pending", createdAt: serverTimestamp() });
+    if (auto) {
+      try { localStorage.setItem("ajx_keep", "0"); } catch (e) { }
+      sessionLogin = true; registering = false; $("regForm").reset();
+      return enterUser(cred.user);
+    }
+    await signOut(auth);
+    registering = false;
+    $("regForm").reset();
+    show("loginPage");
+    $("lPhone").value = phone; $("lPass").value = "";
+    $("lMsg").textContent = auto ? "Account created. Now enter your password to log in." : "Registration received. Now confirm your phone number and enter your password to log in. An administrator must approve you before you can use the group.";
+  } catch (err) { registering = false; try { await signOut(auth); } catch (x) { } $("rErr").textContent = err.code === "permission-denied" ? "Sign-up was blocked by the database rules. The admin must publish the latest Firestore rules." : authMsg(err); }
+});
+$("forgot").addEventListener("click", () => {
+  modal(`<h3>Forgot your password?</h3><p class="note" style="text-align:left;font-size:.98rem">Send a request to the group administrator. When the admin has reset your login, come back, tap <b>Register</b>, and use the <b>same phone number</b> with a new password. After the admin approves you again, all your savings are still there.</p><label>Full name</label><input id="fName" class="input-field plain" placeholder="Your full name"><label>Phone number</label><input id="fPhone" type="tel" class="input-field plain" placeholder="07..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Send request</button>`);
+  $("fPhone").value = $("lPhone").value;
+  $("mGo").onclick = async () => {
+    const name = $("fName").value.trim(), phone = normPhone($("fPhone").value);
+    if (!name || phone.length < 9) return $("mErr").textContent = "Enter your name and phone number.";
+    $("mGo").disabled = true;
+    try {
+      await addDoc(collection(db, "resetRequests"), { name: name.slice(0, 70), phone, at: serverTimestamp() });
+      $("modalBox").innerHTML = `<h3>Request sent</h3><p class="note" style="text-align:left;font-size:1rem">The administrator will reset your login. You can also tell the admin in person or by phone. Then register again with the same phone number and a new password.</p><button class="btn-submit" id="mGo2">OK</button>`;
+      $("mGo2").onclick = closeModal;
+    } catch (err) { $("mGo").disabled = false; $("mErr").textContent = "Could not send. Check your internet and try again."; }
+  };
+});
+$("recheck").addEventListener("click", async () => {
+  $("pErr").textContent = "";
+  try { const d = await getDoc(doc(db, "users", myUid)); if (!d.exists() || d.data().status !== "approved") $("pErr").textContent = "Not approved yet. Please try again later."; }
+  catch (e) { $("pErr").textContent = "Could not check. Try again."; }
+});
+
+let sessionLogin = false;
+onAuthStateChanged(auth, user => { if (registering) return; enterUser(user); });
+function enterUser(user) {
+  unsubs.forEach(u => u()); unsubs = []; me = null; myUid = null; isAdmin = false;
+  if (!user) return show("loginPage");
+  let keep = false; try { keep = localStorage.getItem("ajx_keep") === "1"; } catch (e) { }
+  if (!sessionLogin && !keep) { signOut(auth); return; }   // opening the link always starts at login / register
+  myUid = user.uid;
+  unsubs.push(onSnapshot(doc(db, "users", user.uid), snap => {
+    if (!snap.exists()) { show("pendingPage"); return; }
+    me = { id: snap.id, ...snap.data() };
+    isAdmin = me.role === "admin" && me.status === "approved";
+    if (me.status !== "approved") return show("pendingPage");
+    startApp();
+  }, () => show("pendingPage")));
+}
+
+let started = false;
+function startApp() {
+  if (started) { renderAll(); return; }
+  started = true;
+  show("dashContainer"); openTab("tabHome");
+  document.querySelectorAll(".adminOnly").forEach(x => x.style.display = isAdmin ? "" : "none");
+  $("drawAdmin").style.display = isAdmin ? "block" : "none";
+  const savQ = isAdmin ? collection(db, "savings") : query(collection(db, "savings"), where("phone", "==", me.phone));
+  unsubs.push(onSnapshot(savQ, s => { const a = s.docs.map(d => ({ id: d.id, ...d.data() })); if (isAdmin) allSavings = a; mySavings = isAdmin ? a.filter(x => x.phone === me.phone) : a; renderAll(); }));
+  unsubs.push(onSnapshot(doc(db, "settings", "avatars"), sn => { avatars = sn.exists() ? sn.data() : {}; renderChat(); }, () => { }));
+  unsubs.push(onSnapshot(doc(db, "settings", "raffle"), sn => { raffleCfg = sn.exists() ? sn.data() : {}; renderRaffle(); }, () => { }));
+  unsubs.push(onSnapshot(doc(db, "settings", "general"), sn => { general = sn.exists() ? sn.data() : {}; renderAll(); }, () => { }));
+  unsubs.push(onSnapshot(doc(db, "settings", "payNumbers"), sn => { payNums = sn.exists() ? sn.data() : {}; renderAll(); }, () => { }));
+  unsubs.push(onSnapshot(collection(db, "plans"), s => { plans = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+  unsubs.push(onSnapshot(collection(db, "notices"), s => { notices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }));
+  unsubs.push(onSnapshot(query(collection(db, "messages"), orderBy("at", "desc"), limit(100)), s => { messages = s.docs.map(d => ({ id: d.id, ...d.data() })).reverse(); renderChat(); }));
+  unsubs.push(onSnapshot(collection(db, "draws"), s => { draws = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderDraws(); }));
+  if (isAdmin) unsubs.push(onSnapshot(collection(db, "resetRequests"), s => { resets = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }));
+  if (isAdmin) unsubs.push(onSnapshot(collection(db, "users"), s => { users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+}
+onAuthStateChanged(auth, u => { if (!u) started = false; });
+
+// ---------- helpers on savings ----------
+const cdText = t => { const d = t - Date.now(); if (d <= 0) return "Ready"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 864e5)}d ${z(Math.floor(d % 864e5 / 36e5))}:${z(Math.floor(d % 36e5 / 6e4))}:${z(Math.floor(d % 6e4 / 1e3))}`; };
+setInterval(() => document.querySelectorAll(".cd").forEach(e => { e.textContent = cdText(Number(e.dataset.t)); }), 1000);
+const machImg = (p, sm) => `<div class="mwrap">${p.image ? `<img class="mimg ${sm ? "sm" : ""}" src="${p.image}" alt="" loading="lazy" decoding="async">` : `<div class="mimg ${sm ? "sm" : ""}" style="display:flex;align-items:center;justify-content:center;color:#475569;font-size:2.2rem"><i class="fa-solid fa-gears"></i></div>`}<span class="mprice">${fmt(p.minAmount)}</span><span class="mprice mdur">${p.lockDays} days</span>${p.dailyAmount ? `<span class="mprice" style="bottom:auto;top:10px;background:rgba(5,150,105,.92)">+${fmt(p.dailyAmount)} / day</span>` : ""}${p.locked ? `<div class="mlock"><i class="fa-solid fa-lock"></i> Locked</div>` : ""}</div>`;
+const startOf = s => ms(s.activatedAt) || (ms(s.releaseAt) - Number(s.lockDays) * 864e5);
+const dayOf = s => Math.min(Number(s.lockDays), Math.max(1, Math.floor((Date.now() - startOf(s)) / 864e5) + 1));
+const payToList = prov => { const list = payNums[prov === "AIRTEL" ? "airtel" : "mtn"] || []; return list.length ? list.map(n => `<div class="dep-card" style="padding:10px"><div class="dep-info"><div class="n">+${esc(n.number)}</div><div class="m">${esc(n.name || "")}</div></div><button type="button" class="btn-small" data-copy="${esc(n.number)}">Copy</button></div>`).join("") : `<div class="note" style="text-align:left">The admin has not added a ${prov === "AIRTEL" ? "Airtel" : "MTN"} number yet. Please ask the admin for the number.</div>`; };
+document.addEventListener("click", e => { const b = e.target.closest("[data-copy]"); if (b && navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; }); });
+const earnOf = s => { const d = Number(s.dailyAmount || 0); return d && ["active", "withdraw_requested", "paid"].includes(s.status) ? d * dayOf(s) : 0; };
+const dailyFor = s => { const pl = plans.find(x => x.id === s.planId); return pl && pl.dailyAmount && pl.minAmount ? Math.round(Number(pl.dailyAmount) * Number(s.amount) / Number(pl.minAmount)) : 0; };
+const payoutOf = s => Number(s.amount) + earnOf(s);
+function updateEarn() {
+  if (!me) return;
+  const live = mySavings.filter(x => ["active", "withdraw_requested"].includes(x.status));
+  const e = live.reduce((t, x) => t + earnOf(x), 0), d = mySavings.filter(x => x.status === "active" && !isReady(x)).reduce((t, x) => t + Number(x.dailyAmount || 0), 0);
+  ["hEarn", "bEarn"].forEach(i => { if ($(i)) $(i).textContent = fmt(e); }); ["hDaily", "bDaily"].forEach(i => { if ($(i)) $(i).textContent = fmt(d); });
+  const all = isAdmin ? allSavings : mySavings;
+  if (isAdmin && $("aEarn")) {
+    $("aEarn").textContent = fmt(allSavings.filter(x => ["active", "withdraw_requested"].includes(x.status)).reduce((t, x) => t + earnOf(x), 0));
+    $("aDay").textContent = fmt(allSavings.filter(x => x.status === "active" && !isReady(x)).reduce((t, x) => t + Number(x.dailyAmount || 0), 0));
+  }
+  document.querySelectorAll(".earn").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.textContent = fmt(earnOf(x)); });
+  document.querySelectorAll(".dayn").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.textContent = "Day " + dayOf(x) + " of " + x.lockDays; });
+}
+setInterval(updateEarn, 1000);
+const isReady = s => s.status === "active" && ms(s.releaseAt) && ms(s.releaseAt) <= Date.now();
+const sum = (arr, f) => arr.filter(f).reduce((a, s) => a + (Number(s.amount) || 0), 0);
+function stateOf(s) { return isReady(s) ? "ready" : s.status; }
+function stateText(s) { return ({ awaiting: "Awaiting confirmation", active: "Locked", ready: "Ready to withdraw", withdraw_requested: "Withdrawal requested", paid: "Paid out", cancelled: "Cancelled" })[stateOf(s)] || s.status; }
+
+// ---------- render ----------
+let _raf = 0;
+function renderAll() { if (_raf) return; _raf = requestAnimationFrame(() => { _raf = 0; renderAllNow(); }); }
+const adminNumCards = () => ["mtn", "airtel"].flatMap(net => (payNums[net] || []).map((n, i) => `<div class="card"><div class="title">${net === "mtn" ? "MTN" : "Airtel"} <span class="tag">+${esc(n.number)}</span></div><div class="row"><span>${esc(n.name || "")}</span><span></span></div><div class="actions"><button class="btn-small red" data-act="delNum" data-id="${net}:${i}">Delete</button></div></div>`)).join("") || `<div class="empty">No numbers yet. Add the MTN and Airtel numbers members should pay to.</div>`;
+const adminPlanCards = () => plans.map(p => `<div class="card">${machImg(p, true)}<div class="title">${esc(p.name)} ${tags(p)} <span class="tag ${p.active !== false ? "active" : ""}">${p.active !== false ? "On" : "Off"}</span></div><div class="row"><span>${p.lockDays} days</span><span>min ${fmt(p.minAmount)}</span></div><div class="actions"><button class="btn-small" data-act="editPlan" data-id="${p.id}">Edit</button><button class="btn-small" data-act="planPhoto" data-id="${p.id}">${p.image ? "Change photo" : "Add photo"}</button><button class="btn-small grey" data-act="lockPlan" data-id="${p.id}">${p.locked ? "Unlock" : "Lock"}</button><button class="btn-small grey" data-act="togglePlan" data-id="${p.id}">${p.active !== false ? "Hide" : "Show"}</button><button class="btn-small red" data-act="delPlan" data-id="${p.id}">Delete</button></div></div>`).join("") || `<div class="empty">No plans yet. Add the first one.</div>`;
+function renderAllNow() {
+  if (!me) return;
+  setTimeout(updateEarn, 0);
+  $("hSaved").textContent = fmt(sum(mySavings, s => s.status === "active" && !isReady(s)));
+  const bL = sum(mySavings, s => s.status === "active" && !isReady(s)), bR = sum(mySavings, isReady), bP = sum(mySavings, s => s.status === "withdraw_requested");
+  $("bLocked").textContent = fmt(bL); $("bReady").textContent = fmt(bR); $("bPend").textContent = fmt(bP); $("bTotal").textContent = fmt(bL + bR + bP);
+  $("hReady").textContent = fmt(sum(mySavings, isReady));
+  $("hAwait").textContent = fmt(sum(mySavings, s => s.status === "awaiting"));
+  $("hPaid").textContent = fmt(sum(mySavings, s => s.status === "paid"));
+  $("hPlans").textContent = mySavings.filter(s => ["active", "awaiting", "withdraw_requested"].includes(s.status)).length;
+  const nxt = mySavings.filter(s => s.status === "active" && !isReady(s)).map(s => ms(s.releaseAt)).sort((a, b) => a - b)[0];
+  $("hNext").textContent = nxt ? dd(nxt) : "-";
+  $("bNext").dataset.t = nxt || 0; $("bNext").textContent = nxt ? cdText(nxt) : "-";
+  $("hMembers").textContent = isAdmin ? users.filter(u => u.status === "approved").length : "-";
+  $("mLocked").textContent = $("hSaved").textContent; $("mReady").textContent = $("hReady").textContent;
+  $("myName").textContent = me.name; $("myPhone").textContent = "+" + me.phone; $("myRole").textContent = isAdmin ? "Admin" : "Member";
+  const nl = n => `<div class="msg-item">${esc(n.text)}<small>${dt(n.at)}</small></div>`;
+  $("homeNotices").innerHTML = notices.slice(0, 3).map(nl).join("") || `<div class="empty">No notices yet</div>`;
+  $("noticeList").innerHTML = notices.map(n => `<div class="card">${esc(n.text)}<div class="row" style="margin-top:6px"><span>${dt(n.at)}</span>${isAdmin ? `<span><a style="color:#fca5a5;cursor:pointer" data-act="delNotice" data-id="${n.id}">Delete</a></span>` : ""}</div></div>`).join("") || `<div class="empty">No notices yet</div>`;
+  if (curTab === "tabPlans" || curTab === "tabDeposit") renderPlans();
+  if (curTab === "tabRecords") renderRecords();
+  if (isAdmin && (curTab === "tabAdmin" || curTab === "tabMachines")) renderAdmin();
+}
+const SERIES = ["All", "A-series", "B-series", "C-series", "D-series"];
+let seriesFilter = "All";
+const BASE_MACHINES = ["Water Pumps", "Generators", "Standard Mining Boxes"];
+const machList = () => ["All machines", ...new Set([...BASE_MACHINES, ...plans.map(p => p.machine).filter(Boolean)])];
+let machineFilter = "All machines";
+const planMatch = p => p.active !== false && (seriesFilter === "All" || p.series === seriesFilter) && (machineFilter === "All machines" || p.machine === machineFilter);
+const machChips = () => machList().map(x => `<button class="series-chip ${x === machineFilter ? "on" : ""}" data-mach="${x}">${x}</button>`).join("");
+const tags = p => `${p.series ? `<span class="tag">${esc(p.series)}</span> ` : ""}${p.machine ? `<span class="tag" style="background:#0e7490">${esc(p.machine)}</span>` : ""}`;
+function pickAvatar() {
+  return new Promise((resolve, reject) => {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return resolve(null);
+      const url = URL.createObjectURL(f), img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas"); c.width = c.height = 160; const m = Math.min(img.width, img.height);
+        c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 160, 160);
+        URL.revokeObjectURL(url); resolve(c.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = () => reject(new Error("Could not read that photo."));
+      img.src = url;
+    };
+    inp.click();
+  });
+}
+function pickImage() {
+  return new Promise((resolve, reject) => {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return resolve(null);
+      const url = URL.createObjectURL(f), img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 560 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        let out = c.toDataURL("image/jpeg", 0.62);
+        if (out.length > 250000) out = c.toDataURL("image/jpeg", 0.45);
+        URL.revokeObjectURL(url); resolve(out);
+      };
+      img.onerror = () => reject(new Error("Could not read that photo."));
+      img.src = url;
+    };
+    inp.click();
+  });
+}
+function renderPlans() {
+  renderDeposit();
+  $("seriesBar").innerHTML = SERIES.map(x => `<button class="series-chip ${x === seriesFilter ? "on" : ""}" data-series="${x}">${x}</button>`).join("");
+  $("machBar").innerHTML = machChips();
+  const act = plans.filter(planMatch);
+  $("planList").innerHTML = act.map(p => `<div class="card">${machImg(p)}<div class="title">${esc(p.name)} ${tags(p)}</div>
+    <div class="row"><span>Lock period</span><span>${p.lockDays} days</span></div>
+    <div class="row"><span>Minimum deposit</span><span>${fmt(p.minAmount)}</span></div>
+    ${p.dailyAmount ? `<div class="row"><span>Daily commission</span><span>${fmt(p.dailyAmount)}</span></div><div class="row"><span>Total after ${p.lockDays} days (savings + commission)</span><span>${fmt(Number(p.minAmount) + Number(p.dailyAmount) * Number(p.lockDays))}</span></div>` : ""}
+    <div class="actions">${p.locked ? `<button class="btn-small grey" disabled><i class="fa-solid fa-lock"></i> Locked</button>` : `<button class="btn-small" data-act="startPlan" data-id="${p.id}">Start this plan</button>`}</div></div>`).join("") || `<div class="empty">${seriesFilter === "All" && machineFilter === "All machines" ? "The admin has not added any plans yet." : "No machines here yet."}</div>`;
+}
+function onSeries(e) { const b = e.target.closest("[data-series],[data-mach]"); if (!b) return; if (b.dataset.series) seriesFilter = b.dataset.series; else machineFilter = b.dataset.mach; renderPlans(); }
+$("seriesBar").addEventListener("click", onSeries);
+$("depBar").addEventListener("click", onSeries);
+$("machBar").addEventListener("click", onSeries);
+$("depMach").addEventListener("click", onSeries);
+function renderDeposit() {
+  const chips = SERIES.map(x => `<button class="series-chip ${x === seriesFilter ? "on" : ""}" data-series="${x}">${x}</button>`).join("");
+  $("depBar").innerHTML = chips;
+  $("depMach").innerHTML = machChips();
+  const list = plans.filter(planMatch);
+  $("depList").innerHTML = list.map(p => `<div class="dep-card">${p.image ? `<img class="dep-img" src="${p.image}" alt="">` : `<div class="dep-ico"><i class="fa-solid fa-piggy-bank"></i></div>`}<div class="dep-info"><div class="n">${esc(p.name)} ${tags(p)}</div><div class="m">Lock ${p.lockDays} days &middot; Min ${fmt(p.minAmount)}${p.dailyAmount ? " &middot; +" + fmt(p.dailyAmount) + "/day" : ""}</div></div>${p.locked ? `<button class="btn-small grey" disabled><i class="fa-solid fa-lock"></i> Locked</button>` : `<button class="btn-small" data-act="startPlan" data-id="${p.id}">Deposit</button>`}</div>`).join("") || `<div class="empty">${seriesFilter === "All" && machineFilter === "All machines" ? "The admin has not added any plans yet." : "No machines here yet."}</div>`;
+  const aw = mySavings.filter(x => x.status === "awaiting");
+  $("dLocked").textContent = $("hSaved").textContent; $("dReady").textContent = $("hReady").textContent;
+  $("dAwait").textContent = fmt(aw.reduce((t, x) => t + Number(x.amount || 0), 0));
+  $("depAwait").innerHTML = aw.map(x => `<div class="dep-card"><div class="dep-ico" style="background:#78350f;color:#fcd34d"><i class="fa-solid fa-hourglass-half"></i></div><div class="dep-info"><div class="n">${fmt(x.amount)}</div><div class="m">${esc(x.planName)} &middot; pay the treasurer, then wait</div></div><button class="btn-small red" data-act="cancelSav" data-id="${x.id}">Cancel</button></div>`).join("") || `<div class="empty">Nothing waiting</div>`;
+}
+function renderRecords() {
+  const list = [...mySavings].sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+  $("recordList").innerHTML = list.map(s => {
+    const st = stateOf(s);
+    let btns = "";
+    if (s.status === "awaiting") btns = (s.sentAt ? "" : `<button class="btn-small green" data-act="sentMoney" data-id="${s.id}">I have sent the money</button>`) + `<button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Cancel</button>`;
+    if (st === "ready") btns = `<button class="btn-small green" data-act="reqWithdraw" data-id="${s.id}">Request withdrawal</button>`;
+    return `<div class="card"><div class="title">${esc(s.planName)} <span class="tag ${st}">${stateText(s)}</span></div>
+      <div class="row"><span>Amount</span><span>${fmt(s.amount)}</span></div>
+      <div class="row"><span>Lock</span><span>${s.lockDays} days</span></div>
+      <div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div>
+      ${s.status === "awaiting" ? `<div class="note" style="text-align:left;margin:8px 0 4px">${s.sentAt ? "You said you sent the money. Waiting for the admin to confirm." : "Send " + fmt(s.amount) + " to:"}</div>${s.sentAt ? "" : payToList(s.provider)}` : ""}
+      ${ms(s.releaseAt) ? `<div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div>` : ""}
+      ${s.dailyAmount && ["active", "withdraw_requested", "paid"].includes(s.status) ? `<div class="row"><span>Daily commission</span><span>${fmt(s.dailyAmount)}</span></div><div class="row"><span>Commission earned</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${s.id}">${fmt(earnOf(s))}</span></div><div class="row"><span>Commission day</span><span class="dayn" data-id="${s.id}">Day ${dayOf(s)} of ${s.lockDays}</span></div><div class="row"><span>You receive at release</span><span>${fmt(Number(s.amount) + Number(s.dailyAmount) * Number(s.lockDays))}</span></div>` : ""}
+      ${s.status === "active" && ms(s.releaseAt) ? `<div class="row"><span>Time left</span><span class="cd" style="color:#fcd34d;font-weight:800" data-t="${ms(s.releaseAt)}">${cdText(ms(s.releaseAt))}</span></div>` : ""}
+      ${s.status === "paid" ? `<div class="row"><span>Paid out</span><span>${dt(s.paidAt)}</span></div>` : ""}
+      ${btns ? `<div class="actions">${btns}</div>` : ""}</div>`;
+  }).join("") || `<div class="empty">No savings yet. Open Plans to start.</div>`;
+}
+function renderAdmin() {
+  const held = sum(allSavings, s => s.status === "active" || s.status === "withdraw_requested");
+  const owed = sum(allSavings, s => s.status === "withdraw_requested");
+  if (document.activeElement !== $("scPhone")) $("scPhone").value = general.supportPhone || "";
+  $("autoNote").textContent = general.autoApprove ? "Auto register: new members use the app straight after they register." : "Wait for approval: new members wait until an admin approves them.";
+  $("modeAuto").classList.toggle("on", !!general.autoApprove); $("modeWait").classList.toggle("on", !general.autoApprove);
+  $("aActive").innerHTML = allSavings.filter(x => x.status === "active").sort((a, b) => ms(a.releaseAt) - ms(b.releaseAt)).map(x => `<div class="card"><div class="title">${esc(x.name)} · ${fmt(x.amount)}</div><div class="row"><span>Machine</span><span>${esc(x.planName)}</span></div><div class="row"><span>Commission day</span><span class="dayn" data-id="${x.id}">Day ${dayOf(x)} of ${x.lockDays}</span></div><div class="row"><span>Daily commission</span><span>${fmt(x.dailyAmount || 0)}</span></div><div class="row"><span>Commission earned</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${x.id}">${fmt(earnOf(x))}</span></div><div class="row"><span>To pay at release</span><span>${fmt(Number(x.amount) + Number(x.dailyAmount || 0) * Number(x.lockDays))}</span></div><div class="row"><span>Time left</span><span class="cd" data-t="${ms(x.releaseAt)}">${cdText(ms(x.releaseAt))}</span></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aHeld").textContent = fmt(held); $("aOwed").textContent = fmt(owed);
+  $("aResets").innerHTML = resets.map(r => `<div class="card"><div class="title">${esc(r.name)}</div><div class="row"><span>Phone</span><span>+${esc(r.phone)}</span></div><div class="row"><span>Asked</span><span>${dt(r.at)}</span></div><div class="note" style="text-align:left;margin:8px 0">Quickest: tap <b style="color:#fff">Set new password</b> below. Or by hand: 1. In Firebase open Authentication, then Users. 2. Find <b style="color:#fff">${esc(r.phone)}@ajx-savings.app</b>. 3. Tap the three dots, then Delete account. 4. Tap Done here and tell the member to register again with the same phone.</div><div class="actions">${users.find(x => x.phone === r.phone && x.role !== "admin") ? `<button class="btn-small" data-act="setPw" data-id="${users.find(x => x.phone === r.phone).id}">Set new password</button>` : ""}<button class="btn-small green" data-act="doneReset" data-id="${r.id}">Done</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aPending").innerHTML = users.filter(u => u.status === "pending").map(u => `<div class="card"><div class="title">${esc(u.name)}</div><div class="row"><span>Phone</span><span>+${esc(u.phone)}</span></div><div class="actions"><button class="btn-small green" data-act="approveUser" data-id="${u.id}">Approve</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div>${dailyFor(s) ? `<div class="row"><span>Daily commission</span><span>${fmt(dailyFor(s))}</span></div>` : ""}${s.sentAt ? `<div class="row"><span>Member says</span><span style="color:#6ee7b7;font-weight:800">Money sent</span></div>` : ""}${s.provider ? `<div class="row"><span>Pays with</span><span>${esc(s.provider)} +${esc(s.payerPhone || "")}</span></div>` : ""}<div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · pay ${fmt(payoutOf(s))}</div><div class="row"><span>Saved</span><span>${fmt(s.amount)}</span></div><div class="row"><span>Commission earned</span><span>${fmt(earnOf(s))}</span></div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aNums").innerHTML = adminNumCards(); $(curTab === "tabMachines" ? "mList" : "aPlans").innerHTML = adminPlanCards();
+  $("aMembers").innerHTML = users.filter(u => u.status === "approved").map(u => `<div class="card"><div class="row"><span><b style="color:#fff">${esc(u.name)}</b> ${u.role === "admin" ? '<span class="tag active">Admin</span>' : ""}</span><span>+${esc(u.phone)}</span></div>${u.id !== myUid ? `<div class="actions">${u.role !== "admin" ? `<button class="btn-small" data-act="setPw" data-id="${u.id}">Set password</button>` : ""}<button class="btn-small grey" data-act="toggleAdmin" data-id="${u.id}">${u.role === "admin" ? "Remove admin" : "Make admin"}</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div>` : ""}</div>`).join("");
+}
+function renderChat() {
+  $("chatForm").style.display = isAdmin ? "flex" : "none";
+  $("chatReadOnly").style.display = isAdmin ? "none" : "block";
+  $("chatBox").innerHTML = messages.map(m => { const av = avatars[m.uid], mine = m.uid === myUid; return `<div class="msgrow ${mine ? "me" : ""}">${av ? `<img class="av" src="${av}" alt="">` : `<div class="av">${esc((m.name || "?").charAt(0).toUpperCase())}</div>`}<div class="bubble ${mine ? "me" : ""}"><small>${esc(m.name)}${av || m.admin ? ' <span class="tag active">Admin</span>' : ""}</small>${esc(m.text)}</div></div>`; }).join("") || `<div class="empty">No messages yet</div>`;
+  scrollChat();
+}
+function scrollChat() { const b = $("chatBox"); if (b) b.scrollTop = b.scrollHeight; }
+function renderRaffle() {
+  const lo = Number(raffleCfg.minAmount), hi = Number(raffleCfg.maxAmount);
+  $("raffleInfo").textContent = lo >= 0 && hi > 0 && raffleCfg.maxAmount != null ? "Win between " + fmt(lo) + " and " + fmt(hi) : "";
+  if (isAdmin) { if (document.activeElement !== $("rfMin")) $("rfMin").value = raffleCfg.minAmount ?? ""; if (document.activeElement !== $("rfMax")) $("rfMax").value = raffleCfg.maxAmount ?? ""; }
+}
+function renderDraws() {
+  $("drawList").innerHTML = draws.map(d => `<div class="card"><div class="title">🎉 ${esc(d.winnerName)}</div>${d.amount ? `<div class="row"><span>Amount won</span><span style="color:#6ee7b7;font-weight:800">${fmt(d.amount)}</span></div>` : ""}<div class="row"><span>Prize</span><span>${esc(d.prize || "-")}</span></div><div class="row"><span>Date</span><span>${dt(d.at)}</span></div></div>`).join("") || `<div class="empty">No raffles yet</div>`;
+}
+
+// ---------- actions ----------
+async function action(act, id, el) {
+  try {
+    if (act === "startPlan") {
+      const p = plans.find(x => x.id === id); if (!p) return;
+      if (p.locked) return alert("This machine is locked right now.");
+      modal(`<h3>${esc(p.name)} ${tags(p)}</h3><p class="note" style="text-align:left">Lock: ${p.lockDays} days. Minimum ${fmt(p.minAmount)}. ${PAYMENTS_ON ? "You will get a prompt on your phone to approve the payment with your mobile money PIN." : "After you pay the treasurer, the admin confirms."} Your ${p.lockDays} days begin once the money is confirmed. On the release date you can withdraw your savings plus the commission earned.</p><label>Amount (${CURRENCY})</label><input id="mAmt" type="number" inputmode="numeric" class="input-field plain" min="${p.minAmount}" placeholder="${p.minAmount}"><label>Pay with</label><div class="series-bar" id="provBar"><button type="button" class="series-chip on" data-prov="MTN">MTN MoMo</button><button type="button" class="series-chip" data-prov="AIRTEL">Airtel Money</button></div>${PAYMENTS_ON ? "" : `<div id="payTo"></div>`}<label>${PAYMENTS_ON ? "Mobile money number" : "Your number you will pay from"}</label><input id="mPhone" type="tel" inputmode="numeric" class="input-field plain" value="${esc(me.phone)}" placeholder="2567..."><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${PAYMENTS_ON ? "Pay now" : "Request this plan"}</button>`);
+      let prov = "MTN";
+      const showPayTo = () => {
+        if (!$("payTo")) return;
+        const list = payNums[prov === "MTN" ? "mtn" : "airtel"] || [];
+        $("payTo").innerHTML = `<label>Send your money to this ${prov === "MTN" ? "MTN" : "Airtel"} number</label>` + (list.length ? list.map(n => `<div class="dep-card" style="padding:10px"><div class="dep-info"><div class="n">+${esc(n.number)}</div><div class="m">${esc(n.name || "")}</div></div><button type="button" class="btn-small" data-copy="${esc(n.number)}">Copy</button></div>`).join("") : `<div class="note" style="text-align:left">No ${prov === "MTN" ? "MTN" : "Airtel"} number has been added yet. Please ask the admin.</div>`);
+      };
+      showPayTo();
+      if ($("payTo")) $("payTo").onclick = e => { const b = e.target.closest("[data-copy]"); if (b && navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; }); };
+      $("provBar").onclick = e => { const b = e.target.closest("[data-prov]"); if (!b) return; prov = b.dataset.prov; document.querySelectorAll("#provBar .series-chip").forEach(c => c.classList.toggle("on", c === b)); showPayTo(); };
+      if (p.dailyAmount) { $("mAmt").insertAdjacentHTML("afterend", `<div class="note" id="mEst" style="text-align:left;margin:6px 0 0"></div>`); const est = () => { const a = Math.floor(Number($("mAmt").value)) || Number(p.minAmount), dly = Math.round(Number(p.dailyAmount) * a / Number(p.minAmount)); $("mEst").innerHTML = `Daily commission: <b>${fmt(dly)}</b> &middot; after ${p.lockDays} days you receive about <b>${fmt(a + dly * Number(p.lockDays))}</b>`; }; $("mAmt").oninput = est; est(); }
+      $("mGo").onclick = async () => {
+        $("mErr").textContent = "";
+        const a = Math.floor(Number($("mAmt").value));
+        if (!a || a < Number(p.minAmount)) return $("mErr").textContent = "Minimum is " + fmt(p.minAmount);
+        $("mGo").disabled = true;
+        let pay = String($("mPhone").value).replace(/\D/g, "");
+        if (pay.startsWith("0")) pay = "256" + pay.slice(1);
+        if (!/^256\d{9}$/.test(pay)) { $("mGo").disabled = false; return $("mErr").textContent = "Enter a valid number, e.g. 0772123456"; }
+        const rec = { uid: myUid, name: me.name, phone: me.phone, planId: p.id, planName: p.name, amount: a, lockDays: Number(p.lockDays), status: "awaiting", provider: prov, payerPhone: pay, createdAt: serverTimestamp() };
+        if (p.series) rec.series = p.series;
+        if (p.machine) rec.machine = p.machine;
+        let ref;
+        try { ref = await addDoc(collection(db, "savings"), rec); }
+        catch (err) {
+          $("mGo").disabled = false;
+          return $("mErr").textContent = err.code === "permission-denied" ? "The app could not save this request. The admin must publish the latest Firestore rules." : "Could not send the request (" + (err.code || "error") + "). Check your internet and try again.";
+        }
+        if (!PAYMENTS_ON) {
+          modal(`<h3>Request sent</h3><p class="note" style="text-align:left"><b>Step 1.</b> Send <b>${fmt(a)}</b> by ${prov === "MTN" ? "MTN MoMo" : "Airtel Money"} to this number:</p>${payToList(prov)}<p class="note" style="text-align:left"><b>Step 2.</b> After you have sent the money, tap the button below. The admin will confirm it, then your plan and daily commission start counting.</p><button class="btn-submit" id="sDone">I have sent the money</button><button class="btn-small grey" id="sLater" style="width:100%;margin-top:10px;padding:12px">I will pay later</button>`);
+          $("sDone").onclick = async () => { try { await updateDoc(doc(db, "savings", ref.id), { sentAt: serverTimestamp() }); } catch (x) { } closeModal(); openTab("tabRecords"); };
+          $("sLater").onclick = () => { closeModal(); openTab("tabRecords"); };
+          return;
+        }
+        try {
+          $("mGo").textContent = "Sending request...";
+          const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js");
+          const r = await httpsCallable(getFunctions(app, "us-central1"), "startPayment")({ savingId: ref.id });
+          const url = r.data && r.data.redirect;
+          modal(`<h3>Approve the payment</h3><p class="note" style="text-align:left">A request for <b>${fmt(a)}</b> was sent to <b>+${pay}</b> (${prov === "MTN" ? "MTN MoMo" : "Airtel Money"}). ${url ? "Tap the button below to approve it, then enter your PIN." : "Check your phone and enter your PIN to approve."} Your plan starts automatically once the money is received.</p>${url ? `<a class="btn-submit" style="display:block;text-align:center;text-decoration:none" href="${esc(url)}" target="_blank" rel="noopener">Open approval page</a>` : ""}<button class="btn-small grey" id="mGo2" style="width:100%;margin-top:10px;padding:12px">Done</button>`);
+          $("mGo2").onclick = () => { closeModal(); openTab("tabRecords"); };
+        } catch (err) {
+          modal(`<h3>Payment not started</h3><p class="note" style="text-align:left">${esc(err.message || "Try again.")} Your request is saved under Records, and you can cancel it there or pay the treasurer instead.</p><button class="btn-submit" id="mGo2">OK</button>`);
+          $("mGo2").onclick = () => { closeModal(); openTab("tabRecords"); };
+        }
+      };
+    }
+    else if (act === "setPw") {
+      const u = users.find(x => x.id === id); if (!u || u.role === "admin") return;
+      modal(`<h3>Set password</h3><p class="note" style="text-align:left">New password for <b>${esc(u.name)}</b> (+${esc(u.phone)}). You must tell the member the new password yourself, and ask them to change it at My, then Password.</p><label>New password</label><input id="spNew" type="text" class="input-field plain" autocomplete="off" placeholder="At least 6 characters"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save password</button>`);
+      $("mGo").onclick = async () => {
+        const n = $("spNew").value.trim();
+        if (n.length < 6) return $("mErr").textContent = "The password must be at least 6 characters.";
+        $("mGo").disabled = true; $("mErr").textContent = "";
+        try {
+          const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js");
+          await httpsCallable(getFunctions(app, "us-central1"), "adminSetPassword")({ uid: u.id, password: n });
+          modal(`<h3>Password set</h3><p class="note" style="text-align:left">${esc(u.name)} can now log in with the new password. Tell them what it is.</p><button class="btn-submit" id="mGo2">OK</button>`); $("mGo2").onclick = closeModal;
+        } catch (err) {
+          $("mGo").disabled = false;
+          $("mErr").textContent = err.code === "functions/not-found" || err.code === "functions/internal" && !err.message.includes("Password") ? "The password service is not switched on yet. See the steps to deploy it." : (err.message || "Could not set the password.");
+        }
+      };
+    }
+    else if (act === "saveSupport") {
+      let n = $("scPhone").value.replace(/\D/g, ""); if (n.startsWith("0")) n = "256" + n.slice(1);
+      if (n && !/^256\d{9}$/.test(n)) return alert("Enter a valid number, e.g. 0772123456");
+      await setDoc(doc(db, "settings", "general"), { supportPhone: n }, { merge: true }); alert("Saved");
+    }
+    else if (act === "setAvatar") {
+      try { const im = await pickAvatar(); if (im) { await setDoc(doc(db, "settings", "avatars"), { [myUid]: im }, { merge: true }); alert("Your photo is saved. It shows beside your messages."); } }
+      catch (err) { alert(err.message || "Photo failed."); }
+    }
+    else if (act === "checkSetup") {
+      let rulesOk = true, code = "";
+      try { await setDoc(doc(db, "settings", "general"), { checkedAt: serverTimestamp() }, { merge: true }); } catch (e) { rulesOk = false; code = e.code || "error"; }
+      modal(`<h3>App setup check</h3><div class="row"><span>App version</span><span>${APP_VERSION}</span></div><div class="row"><span>Firebase rules</span><span style="font-weight:800;color:${rulesOk ? "#6ee7b7" : "#fca5a5"}">${rulesOk ? "Updated" : "NOT updated (" + esc(code) + ")"}</span></div><div class="row"><span>New members</span><span>${general.autoApprove ? "Auto register" : "Wait for approval"}</span></div><div class="row"><span>Machines loaded</span><span>${plans.length}</span></div><div class="row"><span>Payment numbers</span><span>${(payNums.mtn || []).length + (payNums.airtel || []).length}</span></div>${rulesOk ? "" : `<p class="note" style="text-align:left">Open Firebase, then Firestore, then Rules. Delete the old text, paste the new rules file, and tap Publish.</p>`}<button class="btn-submit" id="mGo">OK</button>`);
+      $("mGo").onclick = closeModal;
+    }
+    else if (act === "setMode") {
+      const turnOn = id === "auto"; if (turnOn === !!general.autoApprove) return;
+      const waiting = users.filter(u => u.status === "pending");
+      await setDoc(doc(db, "settings", "general"), { autoApprove: turnOn }, { merge: true });
+      if (turnOn && waiting.length && confirm("Also approve the " + waiting.length + " member(s) waiting now?")) for (const u of waiting) await updateDoc(doc(db, "users", u.id), { status: "approved" });
+    }
+    else if (act === "changePw") {
+      modal(`<h3>Change password</h3><label>Current password</label><input id="cpOld" type="password" class="input-field plain" autocomplete="current-password"><label>New password</label><input id="cpNew" type="password" class="input-field plain" autocomplete="new-password"><label>Repeat new password</label><input id="cpNew2" type="password" class="input-field plain" autocomplete="new-password"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save password</button>`);
+      $("mGo").onclick = async () => {
+        const o = $("cpOld").value, n = $("cpNew").value;
+        if (!o) return $("mErr").textContent = "Enter your current password.";
+        if (n.length < 6) return $("mErr").textContent = "The new password must be at least 6 characters.";
+        if (n !== $("cpNew2").value) return $("mErr").textContent = "The new passwords do not match.";
+        if (n === o) return $("mErr").textContent = "Choose a different password from the current one.";
+        $("mGo").disabled = true; $("mErr").textContent = "";
+        try {
+          const u = auth.currentUser;
+          await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, o));
+          await updatePassword(u, n);
+          modal(`<h3>Password changed</h3><p class="note" style="text-align:left">Use your new password the next time you log in.</p><button class="btn-submit" id="mGo2">OK</button>`); $("mGo2").onclick = closeModal;
+        } catch (err) {
+          $("mGo").disabled = false;
+          $("mErr").textContent = ["auth/wrong-password", "auth/invalid-credential"].includes(err.code) ? "Your current password is wrong." : "Could not change it (" + (err.code || "error") + "). Try again.";
+        }
+      };
+    }
+    else if (act === "sentMoney") await updateDoc(doc(db, "savings", id), { sentAt: serverTimestamp() });
+    else if (act === "cancelSav") { if (confirm("Cancel this request?")) await updateDoc(doc(db, "savings", id), { status: "cancelled" }); }
+    else if (act === "withdrawAll") {
+      const rd = mySavings.filter(isReady);
+      if (!rd.length) {
+        const nxt = mySavings.filter(x => x.status === "active").map(x => ms(x.releaseAt)).sort((a, b) => a - b)[0];
+        return modal(`<h3>Nothing to withdraw yet</h3><p class="note" style="text-align:left">Your savings can only be withdrawn on their release date.${nxt ? " Your next release is <b>" + dd(nxt) + "</b>." : ""}</p><button class="btn-submit" id="mGo">OK</button>`), $("mGo").onclick = closeModal;
+      }
+      const tot = rd.reduce((t, x) => t + payoutOf(x), 0);
+      if (confirm(`Request withdrawal of ${fmt(tot)} (savings plus commission)? The admin will pay you out.`))
+        for (const x of rd) await updateDoc(doc(db, "savings", x.id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() });
+    }
+    else if (act === "reqWithdraw") { if (confirm("Request your withdrawal now?")) await updateDoc(doc(db, "savings", id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() }); }
+    else if (act === "confirmDep") {
+      const s = allSavings.find(x => x.id === id);
+      if (confirm(`Confirm that ${fmt(s.amount)} was received from ${s.name}?`))
+      { const pl = plans.find(x => x.id === s.planId), daily = pl && pl.dailyAmount && pl.minAmount ? Math.round(Number(pl.dailyAmount) * Number(s.amount) / Number(pl.minAmount)) : 0;
+        await updateDoc(doc(db, "savings", id), { status: "active", activatedAt: serverTimestamp(), releaseAt: Timestamp.fromDate(new Date(Date.now() + s.lockDays * 86400000)), confirmedBy: myUid, dailyAmount: daily }); }
+    }
+    else if (act === "markPaid") { if (confirm("Confirm you have paid this member?")) await updateDoc(doc(db, "savings", id), { status: "paid", paidAt: serverTimestamp(), paidBy: myUid }); }
+    else if (act === "approveUser") {
+      const u = users.find(x => x.id === id);
+      await updateDoc(doc(db, "users", id), { status: "approved" });
+      for (const o of users.filter(x => x.phone === u.phone && x.id !== id)) await deleteDoc(doc(db, "users", o.id)); // old record left after a password reset
+    }
+    else if (act === "doneReset") await deleteDoc(doc(db, "resetRequests", id));
+    else if (act === "rejectUser") { if (confirm("Remove this member from the group?")) await deleteDoc(doc(db, "users", id)); }
+    else if (act === "toggleAdmin") { const u = users.find(x => x.id === id); await updateDoc(doc(db, "users", id), { role: u.role === "admin" ? "member" : "admin" }); }
+    else if (act === "lockPlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { locked: !p.locked }); }
+    else if (act === "togglePlan") { const p = plans.find(x => x.id === id); await updateDoc(doc(db, "plans", id), { active: p.active === false }); }
+    else if (act === "delNum") {
+      const [net, i] = id.split(":"); if (!confirm("Delete this number?")) return;
+      const nw = { mtn: [...(payNums.mtn || [])], airtel: [...(payNums.airtel || [])] }; nw[net].splice(Number(i), 1);
+      await setDoc(doc(db, "settings", "payNumbers"), nw);
+    }
+    else if (act === "editPlan") openPlanForm(id);
+    else if (act === "planPhoto") {
+      try { const im = await pickImage(); if (im) await updateDoc(doc(db, "plans", id), { image: im }); }
+      catch (err) { alert(err.message || "Photo failed."); }
+    }
+    else if (act === "delPlan") { if (confirm("Delete this plan? Existing savings are not affected.")) await deleteDoc(doc(db, "plans", id)); }
+    else if (act === "delNotice") await deleteDoc(doc(db, "notices", id));
+  } catch (err) { alert("Could not do that: " + err.message); }
+}
+function openPlanForm(editId) {
+  const ex = editId ? plans.find(x => x.id === editId) : null;
+  modal(`<h3>${ex ? "Edit machine" : "Add a machine"}</h3><label>Machine name</label><input id="pN" class="input-field plain" placeholder="e.g. Water Pump 1"><label>Machine type</label><select id="pT" class="input-field plain"><option>Water Pumps</option><option>Generators</option><option>Standard Mining Boxes</option><option value="__other">Other (write it yourself)</option></select><input id="pTo" class="input-field plain" placeholder="Write the machine type, e.g. Solar Panels" style="display:none;margin-top:8px"><label>Series</label><select id="pS" class="input-field plain"><option>A-series</option><option>B-series</option><option>C-series</option><option>D-series</option></select><label>Number of days (countdown)</label><input id="pD" type="number" inputmode="numeric" class="input-field plain" placeholder="30"><label>Price / amount (${CURRENCY})</label><input id="pM" type="number" inputmode="numeric" class="input-field plain" placeholder="50000"><label>Daily commission (${CURRENCY}, added every day)</label><input id="pDa" type="number" inputmode="numeric" class="input-field plain" placeholder="1500"><label>Machine photo</label><button type="button" class="btn-small grey" id="pPick" style="width:100%;padding:12px">Choose photo from gallery</button><img id="pPrev" class="mimg sm" alt="" style="display:none;margin-top:10px"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">${ex ? "Save changes" : "Save machine"}</button>`);
+  let pImg = "";
+  $("pT").onchange = () => { $("pTo").style.display = $("pT").value === "__other" ? "block" : "none"; };
+  if (ex) {
+    $("pN").value = ex.name || "";
+    if (ex.machine && !BASE_MACHINES.includes(ex.machine)) { $("pT").value = "__other"; $("pTo").value = ex.machine; $("pTo").style.display = "block"; } else $("pT").value = ex.machine || "Water Pumps"; $("pS").value = ex.series || "A-series";
+    $("pD").value = ex.lockDays; $("pM").value = ex.minAmount; $("pDa").value = ex.dailyAmount || "";
+    if (ex.image) { $("pPrev").src = ex.image; $("pPrev").style.display = "block"; $("pPick").textContent = "Change photo"; }
+  }
+  $("pPick").onclick = async () => { try { const im = await pickImage(); if (im) { pImg = im; $("pPrev").src = im; $("pPrev").style.display = "block"; $("pPick").textContent = "Change photo"; } } catch (err) { $("mErr").textContent = err.message; } };
+  $("mGo").onclick = async () => {
+    const name = $("pN").value.trim(), d = Math.floor(Number($("pD").value)), m = Math.floor(Number($("pM").value));
+    const mach = $("pT").value === "__other" ? $("pTo").value.trim().replace(/\s+/g, " ").slice(0, 40) : $("pT").value;
+    if (!name || !d || d < 1 || !m || m < 1) return $("mErr").textContent = "Fill in the name, days and price.";
+    if (!mach) return $("mErr").textContent = "Write the machine type.";
+    $("mGo").disabled = true;
+    try {
+      const data = { name, series: $("pS").value, machine: mach, dailyAmount: Math.max(0, Math.floor(Number($("pDa").value) || 0)), lockDays: d, minAmount: m, ...(pImg ? { image: pImg } : {}) };
+      if (ex) await updateDoc(doc(db, "plans", ex.id), data);
+      else await addDoc(collection(db, "plans"), { ...data, active: true, createdAt: serverTimestamp() });
+      closeModal();
+    } catch (err) { $("mGo").disabled = false; $("mErr").textContent = "Could not save. Check your internet and try again."; }
+  };
+}
+$("addPlanBtn").addEventListener("click", () => openPlanForm());
+$("addNumBtn").addEventListener("click", () => {
+  modal(`<h3>Add a payment number</h3><label>Network</label><select id="nNet" class="input-field plain"><option value="mtn">MTN</option><option value="airtel">Airtel</option></select><label>Phone number</label><input id="nNum" type="tel" inputmode="numeric" class="input-field plain" placeholder="0772123456"><label>Name on the number</label><input id="nName" class="input-field plain" placeholder="e.g. Dickson (treasurer)"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save number</button>`);
+  $("mGo").onclick = async () => {
+    let n = $("nNum").value.replace(/\D/g, ""); if (n.startsWith("0")) n = "256" + n.slice(1);
+    if (!/^256\d{9}$/.test(n)) return $("mErr").textContent = "Enter a valid number, e.g. 0772123456";
+    const net = $("nNet").value, nw = { mtn: [...(payNums.mtn || [])], airtel: [...(payNums.airtel || [])] };
+    nw[net].push({ number: n, name: $("nName").value.trim().slice(0, 40) });
+    try { await setDoc(doc(db, "settings", "payNumbers"), nw); closeModal(); } catch (err) { $("mErr").textContent = "Could not save. Try again."; }
+  };
+});
+$("mAddBtn").addEventListener("click", () => openPlanForm());
+$("postNotice").addEventListener("click", async () => {
+  const t = $("noticeText").value.trim(); if (!t) return;
+  await addDoc(collection(db, "notices"), { text: t, at: serverTimestamp(), by: myUid }); $("noticeText").value = "";
+});
+$("chatForm").addEventListener("submit", async e => {
+  e.preventDefault(); const t = $("chatText").value.trim(); if (!t) return; $("chatText").value = "";
+  await addDoc(collection(db, "messages"), { uid: myUid, name: me.name, admin: true, text: t.slice(0, 500), at: serverTimestamp() });
+});
+$("supportBtn").addEventListener("click", () => {
+  const n = general.supportPhone;
+  modal(`<h3>Contact the admin</h3>${n ? `<p class="note" style="text-align:left">+${esc(n)}</p><a class="btn-submit" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px" href="tel:+${esc(n)}">Call</a><a class="btn-submit" style="display:block;text-align:center;text-decoration:none;background:#16a34a" href="https://wa.me/${esc(n)}" target="_blank" rel="noopener">WhatsApp</a>` : `<p class="note" style="text-align:left">The admin has not added a contact number yet. You can read the group chat for messages from the admin.</p>`}<button class="btn-small grey" id="mGo" style="width:100%;margin-top:10px;padding:12px">Close</button>`);
+  $("mGo").onclick = closeModal;
+});
+
+// lucky draw (admin): real random pick among approved members, saved for everyone to see
+let rot = 0;
+$("rfSave").addEventListener("click", async () => {
+  const lo = Math.floor(Number($("rfMin").value)), hi = Math.floor(Number($("rfMax").value));
+  if (!(lo >= 0) || !(hi > 0) || hi < lo) return alert("Enter a start amount, and a final amount that is the same or higher.");
+  await setDoc(doc(db, "settings", "raffle"), { minAmount: lo, maxAmount: hi }); alert("Raffle amounts saved.");
+});
+$("spinBtn").addEventListener("click", async () => {
+  const pool = users.filter(u => u.status === "approved");
+  if (!pool.length) return alert("No members in the raffle.");
+  const lo = Number(raffleCfg.minAmount), hi = Number(raffleCfg.maxAmount), hasAmt = raffleCfg.maxAmount != null && hi > 0;
+  const amount = hasAmt ? Math.min(hi, Math.max(lo, Math.round((lo + Math.random() * (hi - lo)) / 100) * 100)) : 0;
+  const winner = pool[Math.floor(Math.random() * pool.length)];
+  rot += 1440 + Math.floor(Math.random() * 360);
+  $("wheelDisc").style.transform = `rotate(${rot}deg)`;
+  $("raffleResult").textContent = "Spinning...";
+  $("spinBtn").disabled = true;
+  setTimeout(async () => {
+    $("raffleResult").textContent = "🎉 Winner: " + winner.name + (amount ? " - " + fmt(amount) : "");
+    await addDoc(collection(db, "draws"), { winnerName: winner.name, winnerUid: winner.id, prize: $("drawPrize").value.trim(), ...(amount ? { amount } : {}), at: serverTimestamp(), by: myUid });
+    $("spinBtn").disabled = false;
+  }, 5200);
+});
+
+// share the app link
+$("shareBtn").addEventListener("click", async () => {
+  const url = location.origin + location.pathname;
+  const data = { title: "AJX Savings Hub", text: "Join our savings group on AJX Savings Hub:", url };
+  try {
+    if (navigator.share) { await navigator.share(data); return; }
+    await navigator.clipboard.writeText(url);
+    alert("Link copied. Paste it in WhatsApp or SMS to share:\n" + url);
+  } catch (err) {
+    if (err && err.name === "AbortError") return;
+    prompt("Copy this link and share it:", url);
+  }
+});
+
+// install the app on the phone
+let installEvt = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; });
+addEventListener("appinstalled", () => { installEvt = null; });
+$("installBtn").addEventListener("click", async () => {
+  if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) return alert("The app is already installed on this phone.");
+  if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) { } installEvt = null; return; }
+  modal(`<h3>Install the app</h3><p class="note" style="text-align:left;font-size:1rem">1. Open this page in <b>Chrome</b>.<br>2. Tap the <b>three dots</b> at the top right.<br>3. Tap <b>Add to Home screen</b> (or <b>Install app</b>).<br>4. Tap <b>Add</b>. The app will appear with your other apps.</p><button class="btn-submit" id="mGo">OK</button>`);
+  $("mGo").onclick = closeModal;
+});
+
+// release dates pass while the app is open
+setInterval(() => { if (me) renderAll(); }, 60000);
+
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => { }));
+
+// wave background
+const canvas = $("waveCanvas"), ctx = canvas.getContext("2d");
+let W = canvas.width = innerWidth, H = canvas.height = innerHeight;
+addEventListener("resize", () => { W = canvas.width = innerWidth; H = canvas.height = innerHeight; });
+let count = 0;
+(function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const cols = 32, rows = 35, SEP = 28;
+  for (let ix = 0; ix < cols; ix++) for (let iy = 0; iy < rows; iy++) {
+    const x = (ix - cols / 2) * SEP, y = (iy - rows / 2) * SEP;
+    const z = Math.sin((ix + count) * .2) * 18 + Math.sin((iy + count) * .2) * 18;
+    const p = 300 / (300 + y + 300), px = W / 2 + x * p, py = H / 1.35 + (z - y * .5) * p;
+    if (py > 0 && py < H) { ctx.beginPath(); ctx.arc(px, py, Math.max(.5, 2 * p), 0, 6.283); ctx.fillStyle = `rgba(56,189,248,${Math.min(.6, p * .9)})`; ctx.fill(); }
+  }
+  count += .04; requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
