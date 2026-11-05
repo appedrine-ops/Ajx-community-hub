@@ -113,13 +113,25 @@ h2.t{text-align:center;margin:8px 0 14px}
 .mwrap{position:relative;margin-bottom:10px}.mwrap .mimg{margin:0}.mprice{position:absolute;left:10px;bottom:10px;background:rgba(2,6,23,.82);color:#fff;font-weight:800;padding:6px 12px;border-radius:10px;font-size:.95rem}.mprice.mdur{left:auto;right:10px;background:rgba(29,78,216,.9)}.mlock{position:absolute;inset:0;border-radius:12px;background:rgba(2,6,23,.62);display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-weight:800;font-size:1.1rem}.cd{font-variant-numeric:tabular-nums}
 #backBar{position:sticky;top:0;z-index:20;padding:8px 0;margin-bottom:12px;background:rgba(3,7,18,.94)}#backBtn{display:inline-flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #1e3a8a;color:#93c5fd;border-radius:22px;padding:9px 18px;font-size:1rem;font-weight:700;cursor:pointer}
 .msgrow{display:flex;gap:8px;align-items:flex-end}.msgrow.me{flex-direction:row-reverse}.msgrow .bubble{align-self:auto}.av{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#1e3a8a;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:2px solid #38bdf8}
-#splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(circle at 50% 38%,#12306b 0,#050b1f 70%);transition:opacity .5s}#splash.hide{opacity:0;pointer-events:none}#splash img{width:132px;height:132px;border-radius:30px;box-shadow:0 0 50px rgba(56,189,248,.55);animation:spl 1.4s ease-in-out infinite}#splash b{color:#fff;font-size:1.5rem;letter-spacing:.5px}#splash small{color:#7dd3fc;font-size:.95rem}@keyframes spl{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+#splash{position:fixed;inset:0;z-index:9999;pointer-events:none;animation:splOut .5s ease 2.6s forwards;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(circle at 50% 38%,#12306b 0,#050b1f 70%);transition:opacity .5s}#splash.hide{opacity:0;pointer-events:none}#splash svg{border-radius:30px;box-shadow:0 0 50px rgba(56,189,248,.55);animation:spl 1.4s ease-in-out infinite}#splash b{color:#fff;font-size:1.5rem;letter-spacing:.5px}#splash small{color:#7dd3fc;font-size:.95rem}@keyframes splOut{to{opacity:0;visibility:hidden}}@keyframes spl{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 .pbar{height:8px;border-radius:6px;background:#1e293b;margin:6px 0 8px;overflow:hidden}.pfill{height:100%;background:linear-gradient(90deg,#38bdf8,#34d399);border-radius:6px;transition:width .6s}
 .sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
 </style>
 </head>
 <body>
-<div id="splash"><img src="icon-192.png" alt=""><b>AJX Savings Hub</b><small>Save together. Earn daily.</small></div>
+<div id="splash"><svg viewBox="0 0 100 100" width="132" height="132" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#0B1B3A"/><path d="M22 23 L50 18 L50 82 C34 78 22 66 22 53 Z" fill="#1FB6FF"/><path d="M50 18 L78 23 L78 53 C78 66 66 78 50 82 Z" fill="#1496EB"/><circle cx="50" cy="48" r="15" fill="#F7B801"/><circle cx="50" cy="48" r="11" fill="none" stroke="#D69400" stroke-width="1.2"/><path d="M44.5 57 L50 39.5 L55.5 57 M46.4 51.5 L53.6 51.5" fill="none" stroke="#0B1B3A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><b>AJX Savings Hub</b><small>Save together. Earn daily.</small></div>
+<script>
+(function () {
+  window.addEventListener("error", function (e) { window.__ajxErr = e.message || "error"; });
+  setTimeout(function () {
+    if (window.__ajxBooted) return;
+    var b = document.createElement("div"); b.id = "bootMsg";
+    b.style.cssText = "position:fixed;left:12px;right:12px;bottom:16px;z-index:10000;background:#7c2d12;color:#fff;padding:14px;border-radius:14px;font:16px sans-serif;text-align:center";
+    b.innerHTML = "Still starting. Your internet may be slow, so please wait. " + (window.__ajxErr ? "(" + window.__ajxErr + ") " : "") + "<u onclick='location.reload()'>Tap here to reload</u>";
+    document.body.appendChild(b);
+  }, 12000);
+})();
+</script>
 <canvas id="waveCanvas"></canvas>
 <div class="container">
 
@@ -336,7 +348,7 @@ function resetIdle() {
   if (!keep) idleT = setTimeout(() => { if (me) signOut(auth); }, 15 * 60 * 1000);
 }
 ["click", "touchstart", "keydown", "scroll"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
-const APP_VERSION = "2026-11-04 a";
+const APP_VERSION = "2026-11-05 a";
 document.querySelectorAll("[data-ver]").forEach(e => { e.textContent = "Version " + APP_VERSION; });
 const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
 
@@ -969,6 +981,8 @@ let count = 0;
   }
   count += .04; requestAnimationFrame(draw);
 })();
+
+window.__ajxBooted = true; { const bm = document.getElementById("bootMsg"); if (bm) bm.remove(); }
 </script>
 </body>
 </html>
