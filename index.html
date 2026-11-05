@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#030712">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AJX Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
@@ -107,10 +113,13 @@ h2.t{text-align:center;margin:8px 0 14px}
 .mwrap{position:relative;margin-bottom:10px}.mwrap .mimg{margin:0}.mprice{position:absolute;left:10px;bottom:10px;background:rgba(2,6,23,.82);color:#fff;font-weight:800;padding:6px 12px;border-radius:10px;font-size:.95rem}.mprice.mdur{left:auto;right:10px;background:rgba(29,78,216,.9)}.mlock{position:absolute;inset:0;border-radius:12px;background:rgba(2,6,23,.62);display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-weight:800;font-size:1.1rem}.cd{font-variant-numeric:tabular-nums}
 #backBar{position:sticky;top:0;z-index:20;padding:8px 0;margin-bottom:12px;background:rgba(3,7,18,.94)}#backBtn{display:inline-flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #1e3a8a;color:#93c5fd;border-radius:22px;padding:9px 18px;font-size:1rem;font-weight:700;cursor:pointer}
 .msgrow{display:flex;gap:8px;align-items:flex-end}.msgrow.me{flex-direction:row-reverse}.msgrow .bubble{align-self:auto}.av{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#1e3a8a;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:2px solid #38bdf8}
+#splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(circle at 50% 38%,#12306b 0,#050b1f 70%);transition:opacity .5s}#splash.hide{opacity:0;pointer-events:none}#splash img{width:132px;height:132px;border-radius:30px;box-shadow:0 0 50px rgba(56,189,248,.55);animation:spl 1.4s ease-in-out infinite}#splash b{color:#fff;font-size:1.5rem;letter-spacing:.5px}#splash small{color:#7dd3fc;font-size:.95rem}@keyframes spl{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.pbar{height:8px;border-radius:6px;background:#1e293b;margin:6px 0 8px;overflow:hidden}.pfill{height:100%;background:linear-gradient(90deg,#38bdf8,#34d399);border-radius:6px;transition:width .6s}
 .sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
 </style>
 </head>
 <body>
+<div id="splash"><img src="icon-192.png" alt=""><b>AJX Savings Hub</b><small>Save together. Earn daily.</small></div>
 <canvas id="waveCanvas"></canvas>
 <div class="container">
 
@@ -159,6 +168,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="dash-header"><div class="dash-brand">AJX Savings</div><div class="dash-msg-btn" data-tab="tabNotices"><i class="fa-regular fa-bell"></i><span>Notices</span></div></div>
     <div class="bal-card"><small>Total savings with the group</small><div class="bal-total" id="bTotal">0</div>
       <div class="bal-row"><div><small>Locked</small><b id="bLocked">0</b></div><div><small>Ready</small><b id="bReady">0</b></div><div><small>Payout pending</small><b id="bPend">0</b></div></div>
+      <small id="bPayWrap" style="display:none;margin:-4px 0 10px">Payout reaches you in <b class="cdp" id="bPay" data-t="0"></b></small>
       <small style="margin:-4px 0 10px">Next release in <b class="cd" id="bNext" data-t="0">-</b></small>
       <small style="margin:-4px 0 10px">Commission earned <b id="bEarn">0</b> &middot; Commission per day <b id="bDaily">0</b></small>
       <div class="bal-btns"><button class="bal-dep" data-tab="tabDeposit"><i class="fa-solid fa-plus"></i> Deposit</button><button class="bal-wd" data-act="withdrawAll"><i class="fa-solid fa-hand-holding-dollar"></i> Withdraw</button></div></div>
@@ -258,6 +268,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <h2 class="t">Admin panel</h2>
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aHeld">0</div><div class="stat-label">Held by group</div></div><div class="stat-card"><div class="stat-val" id="aOwed">0</div><div class="stat-label">Withdrawals due</div></div></div>
     <div class="card"><div class="title">New member sign-up</div><p class="note" id="autoNote" style="text-align:left"></p><div class="series-bar" style="padding-bottom:0;margin:0"><button class="series-chip" id="modeAuto" data-act="setMode" data-id="auto">Auto register</button><button class="series-chip" id="modeWait" data-act="setMode" data-id="wait">Wait for my approval</button></div><div class="actions" style="margin-top:10px"><button class="btn-small grey" data-act="checkSetup">Check app setup</button></div><div class="note" data-ver style="text-align:left;font-size:.8rem"></div></div>
+    <div class="card"><div class="title">Withdrawal processing time</div><p class="note" style="text-align:left">How many hours after a member asks to withdraw before the money reaches them. Members see a countdown.</p><input class="input-field plain" id="wdHours" type="number" inputmode="numeric" placeholder="7"><div class="actions"><button class="btn-small" data-act="saveWdHours">Save hours</button></div></div>
     <div class="card"><div class="title">Support phone for members</div><p class="note" style="text-align:left">Members tap the Admin icon on My to call or WhatsApp this number.</p><input class="input-field plain" id="scPhone" type="tel" inputmode="numeric" placeholder="0772123456"><div class="actions"><button class="btn-small" data-act="saveSupport">Save</button></div></div>
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aEarn">0</div><div class="stat-label">Commission earned (all)</div></div><div class="stat-card"><div class="stat-val" id="aDay">0</div><div class="stat-label">Commission per day (all)</div></div></div>
     <div class="sec">Password reset requests</div><div id="aResets"></div>
@@ -318,7 +329,14 @@ const dt = t => ms(t) ? new Date(ms(t)).toLocaleString([], { dateStyle: "medium"
 const dd = t => ms(t) ? new Date(ms(t)).toLocaleDateString([], { dateStyle: "medium" }) : "-";
 const normPhone = p => { let d = String(p).replace(/\D/g, ""); if (d.length === 10 && d[0] === "0") d = "256" + d.slice(1); return d; };
 const mailOf = p => normPhone(p) + MAIL_DOMAIN;
-const APP_VERSION = "2026-11-03 d";
+let idleT;
+function resetIdle() {
+  clearTimeout(idleT); if (!me) return;
+  let keep = false; try { keep = localStorage.getItem("ajx_keep") === "1"; } catch (e) { }
+  if (!keep) idleT = setTimeout(() => { if (me) signOut(auth); }, 15 * 60 * 1000);
+}
+["click", "touchstart", "keydown", "scroll"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
+const APP_VERSION = "2026-11-04 a";
 document.querySelectorAll("[data-ver]").forEach(e => { e.textContent = "Version " + APP_VERSION; });
 const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
 
@@ -328,7 +346,10 @@ let resets = [], mySavings = [], allSavings = [], plans = [], users = [], notice
 let unsubs = [];
 
 // ---------- view helpers ----------
-function show(id) { document.querySelectorAll(".view-page").forEach(p => p.classList.remove("active")); $(id).classList.add("active"); }
+const splashT0 = performance.now();
+function hideSplash() { const el = $("splash"); if (!el) return; setTimeout(() => { el.classList.add("hide"); setTimeout(() => el.remove(), 600); }, Math.max(0, 1200 - (performance.now() - splashT0))); }
+setTimeout(hideSplash, 4000);
+function show(id) { document.querySelectorAll(".view-page").forEach(p => p.classList.remove("active")); $(id).classList.add("active"); hideSplash(); }
 let curTab = "tabHome";
 function openTab(id, noPush) {
   document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
@@ -470,13 +491,23 @@ function startApp() {
 onAuthStateChanged(auth, u => { if (!u) started = false; });
 
 // ---------- helpers on savings ----------
-const cdText = t => { const d = t - Date.now(); if (d <= 0) return "Ready"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 864e5)}d ${z(Math.floor(d % 864e5 / 36e5))}:${z(Math.floor(d % 36e5 / 6e4))}:${z(Math.floor(d % 6e4 / 1e3))}`; };
+let clockOff = 0;
+const now = () => Date.now() + clockOff;
+const EAT_MS = 3 * 36e5;
+const dayStart = t => Math.floor((t + EAT_MS) / 864e5) * 864e5 - EAT_MS;
+const eatDate = t => new Date(t).toLocaleDateString([], { dateStyle: "medium", timeZone: "Africa/Kampala" });
+async function syncClock() { try { const t0 = Date.now(), r = await fetch(location.pathname, { method: "HEAD", cache: "no-store" }), t1 = Date.now(), d = r.headers.get("date"); if (d) { const off = new Date(d).getTime() - (t0 + t1) / 2; if (Math.abs(off) < 6048e5) clockOff = off; } } catch (e) { } }
+syncClock(); setInterval(syncClock, 600000);
+const cdText = t => { const d = t - now(); if (d <= 0) return "Ready"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 864e5)}d ${z(Math.floor(d % 864e5 / 36e5))}:${z(Math.floor(d % 36e5 / 6e4))}:${z(Math.floor(d % 6e4 / 1e3))}`; };
 setInterval(() => document.querySelectorAll(".cd").forEach(e => { e.textContent = cdText(Number(e.dataset.t)); }), 1000);
 const machImg = (p, sm) => `<div class="mwrap">${p.image ? `<img class="mimg ${sm ? "sm" : ""}" src="${p.image}" alt="" loading="lazy" decoding="async">` : `<div class="mimg ${sm ? "sm" : ""}" style="display:flex;align-items:center;justify-content:center;color:#475569;font-size:2.2rem"><i class="fa-solid fa-gears"></i></div>`}<span class="mprice">${fmt(p.minAmount)}</span><span class="mprice mdur">${p.lockDays} days</span>${p.dailyAmount ? `<span class="mprice" style="bottom:auto;top:10px;background:rgba(5,150,105,.92)">+${fmt(p.dailyAmount)} / day</span>` : ""}${p.locked ? `<div class="mlock"><i class="fa-solid fa-lock"></i> Locked</div>` : ""}</div>`;
 const startOf = s => ms(s.activatedAt) || (ms(s.releaseAt) - Number(s.lockDays) * 864e5);
-const dayOf = s => Math.min(Number(s.lockDays), Math.max(1, Math.floor((Date.now() - startOf(s)) / 864e5) + 1));
+const dayOf = s => Math.min(Number(s.lockDays), Math.max(1, Math.floor((dayStart(now()) - dayStart(startOf(s))) / 864e5) + 1));
 const payToList = prov => { const list = payNums[prov === "AIRTEL" ? "airtel" : "mtn"] || []; return list.length ? list.map(n => `<div class="dep-card" style="padding:10px"><div class="dep-info"><div class="n">+${esc(n.number)}</div><div class="m">${esc(n.name || "")}</div></div><button type="button" class="btn-small" data-copy="${esc(n.number)}">Copy</button></div>`).join("") : `<div class="note" style="text-align:left">The admin has not added a ${prov === "AIRTEL" ? "Airtel" : "MTN"} number yet. Please ask the admin for the number.</div>`; };
 document.addEventListener("click", e => { const b = e.target.closest("[data-copy]"); if (b && navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; }); });
+const wdHours = () => Number(general.withdrawHours || 0);
+const dueOf = s => ms(s.withdrawRequestedAt) ? ms(s.withdrawRequestedAt) + wdHours() * 36e5 : 0;
+const cdpText = t => { const d = t - now(); if (d <= 0) return "Due now"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 36e5)}h ${z(Math.floor(d % 36e5 / 6e4))}m ${z(Math.floor(d % 6e4 / 1e3))}s`; };
 const earnOf = s => { const d = Number(s.dailyAmount || 0); return d && ["active", "withdraw_requested", "paid"].includes(s.status) ? d * dayOf(s) : 0; };
 const dailyFor = s => { const pl = plans.find(x => x.id === s.planId); return pl && pl.dailyAmount && pl.minAmount ? Math.round(Number(pl.dailyAmount) * Number(s.amount) / Number(pl.minAmount)) : 0; };
 const payoutOf = s => Number(s.amount) + earnOf(s);
@@ -491,10 +522,13 @@ function updateEarn() {
     $("aDay").textContent = fmt(allSavings.filter(x => x.status === "active" && !isReady(x)).reduce((t, x) => t + Number(x.dailyAmount || 0), 0));
   }
   document.querySelectorAll(".earn").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.textContent = fmt(earnOf(x)); });
+  document.querySelectorAll(".cdp").forEach(el => { el.textContent = cdpText(Number(el.dataset.t)); });
+  document.querySelectorAll(".pfill").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.style.width = Math.round(dayOf(x) / Number(x.lockDays) * 100) + "%"; });
+  document.querySelectorAll(".dleft").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.textContent = Number(x.lockDays) - dayOf(x); });
   document.querySelectorAll(".dayn").forEach(el => { const x = all.find(y => y.id === el.dataset.id); if (x) el.textContent = "Day " + dayOf(x) + " of " + x.lockDays; });
 }
 setInterval(updateEarn, 1000);
-const isReady = s => s.status === "active" && ms(s.releaseAt) && ms(s.releaseAt) <= Date.now();
+const isReady = s => s.status === "active" && ms(s.releaseAt) && ms(s.releaseAt) <= now();
 const sum = (arr, f) => arr.filter(f).reduce((a, s) => a + (Number(s.amount) || 0), 0);
 function stateOf(s) { return isReady(s) ? "ready" : s.status; }
 function stateText(s) { return ({ awaiting: "Awaiting confirmation", active: "Locked", ready: "Ready to withdraw", withdraw_requested: "Withdrawal requested", paid: "Paid out", cancelled: "Cancelled" })[stateOf(s)] || s.status; }
@@ -509,6 +543,8 @@ function renderAllNow() {
   setTimeout(updateEarn, 0);
   $("hSaved").textContent = fmt(sum(mySavings, s => s.status === "active" && !isReady(s)));
   const bL = sum(mySavings, s => s.status === "active" && !isReady(s)), bR = sum(mySavings, isReady), bP = sum(mySavings, s => s.status === "withdraw_requested");
+  { const dues = mySavings.filter(x => x.status === "withdraw_requested" && dueOf(x)).map(dueOf).sort((a, b) => a - b);
+    $("bPayWrap").style.display = wdHours() > 0 && dues.length ? "block" : "none"; if (dues.length) { $("bPay").dataset.t = dues[0]; $("bPay").textContent = cdpText(dues[0]); } }
   $("bLocked").textContent = fmt(bL); $("bReady").textContent = fmt(bR); $("bPend").textContent = fmt(bP); $("bTotal").textContent = fmt(bL + bR + bP);
   $("hReady").textContent = fmt(sum(mySavings, isReady));
   $("hAwait").textContent = fmt(sum(mySavings, s => s.status === "awaiting"));
@@ -612,7 +648,8 @@ function renderRecords() {
       <div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div>
       ${s.status === "awaiting" ? `<div class="note" style="text-align:left;margin:8px 0 4px">${s.sentAt ? "You said you sent the money. Waiting for the admin to confirm." : "Send " + fmt(s.amount) + " to:"}</div>${s.sentAt ? "" : payToList(s.provider)}` : ""}
       ${ms(s.releaseAt) ? `<div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div>` : ""}
-      ${s.dailyAmount && ["active", "withdraw_requested", "paid"].includes(s.status) ? `<div class="row"><span>Daily commission</span><span>${fmt(s.dailyAmount)}</span></div><div class="row"><span>Commission earned</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${s.id}">${fmt(earnOf(s))}</span></div><div class="row"><span>Commission day</span><span class="dayn" data-id="${s.id}">Day ${dayOf(s)} of ${s.lockDays}</span></div><div class="row"><span>You receive at release</span><span>${fmt(Number(s.amount) + Number(s.dailyAmount) * Number(s.lockDays))}</span></div>` : ""}
+      ${s.dailyAmount && ["active", "withdraw_requested", "paid"].includes(s.status) ? `<div class="row"><span>Daily commission</span><span>${fmt(s.dailyAmount)}</span></div><div class="row"><span>Commission earned</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${s.id}">${fmt(earnOf(s))}</span></div><div class="row"><span>Day</span><span class="dayn" style="color:#7dd3fc;font-weight:800" data-id="${s.id}">Day ${dayOf(s)} of ${s.lockDays}</span></div><div class="pbar"><div class="pfill" data-id="${s.id}" style="width:${Math.round(dayOf(s) / Number(s.lockDays) * 100)}%"></div></div><div class="row"><span>Days left</span><span class="dleft" data-id="${s.id}">${Number(s.lockDays) - dayOf(s)}</span></div><div class="row"><span>Started</span><span>${eatDate(startOf(s))}</span></div><div class="row"><span>Last day</span><span>${eatDate(dayStart(startOf(s)) + (Number(s.lockDays) - 1) * 864e5)}</span></div><div class="row"><span>You receive at release</span><span>${fmt(Number(s.amount) + Number(s.dailyAmount) * Number(s.lockDays))}</span></div>` : ""}
+      ${s.status === "withdraw_requested" && wdHours() > 0 && dueOf(s) ? `<div class="row"><span>Money reaches you in</span><span class="cdp" style="color:#fcd34d;font-weight:800" data-t="${dueOf(s)}">${cdpText(dueOf(s))}</span></div>` : ""}
       ${s.status === "active" && ms(s.releaseAt) ? `<div class="row"><span>Time left</span><span class="cd" style="color:#fcd34d;font-weight:800" data-t="${ms(s.releaseAt)}">${cdText(ms(s.releaseAt))}</span></div>` : ""}
       ${s.status === "paid" ? `<div class="row"><span>Paid out</span><span>${dt(s.paidAt)}</span></div>` : ""}
       ${btns ? `<div class="actions">${btns}</div>` : ""}</div>`;
@@ -621,6 +658,7 @@ function renderRecords() {
 function renderAdmin() {
   const held = sum(allSavings, s => s.status === "active" || s.status === "withdraw_requested");
   const owed = sum(allSavings, s => s.status === "withdraw_requested");
+  if (document.activeElement !== $("wdHours")) $("wdHours").value = general.withdrawHours ?? "";
   if (document.activeElement !== $("scPhone")) $("scPhone").value = general.supportPhone || "";
   $("autoNote").textContent = general.autoApprove ? "Auto register: new members use the app straight after they register." : "Wait for approval: new members wait until an admin approves them.";
   $("modeAuto").classList.toggle("on", !!general.autoApprove); $("modeWait").classList.toggle("on", !general.autoApprove);
@@ -629,7 +667,7 @@ function renderAdmin() {
   $("aResets").innerHTML = resets.map(r => `<div class="card"><div class="title">${esc(r.name)}</div><div class="row"><span>Phone</span><span>+${esc(r.phone)}</span></div><div class="row"><span>Asked</span><span>${dt(r.at)}</span></div><div class="note" style="text-align:left;margin:8px 0">Quickest: tap <b style="color:#fff">Set new password</b> below. Or by hand: 1. In Firebase open Authentication, then Users. 2. Find <b style="color:#fff">${esc(r.phone)}@ajx-savings.app</b>. 3. Tap the three dots, then Delete account. 4. Tap Done here and tell the member to register again with the same phone.</div><div class="actions">${users.find(x => x.phone === r.phone && x.role !== "admin") ? `<button class="btn-small" data-act="setPw" data-id="${users.find(x => x.phone === r.phone).id}">Set new password</button>` : ""}<button class="btn-small green" data-act="doneReset" data-id="${r.id}">Done</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aPending").innerHTML = users.filter(u => u.status === "pending").map(u => `<div class="card"><div class="title">${esc(u.name)}</div><div class="row"><span>Phone</span><span>+${esc(u.phone)}</span></div><div class="actions"><button class="btn-small green" data-act="approveUser" data-id="${u.id}">Approve</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aDeposits").innerHTML = allSavings.filter(s => s.status === "awaiting").sort((a, b) => ms(a.createdAt) - ms(b.createdAt)).map(s => `<div class="card"><div class="title">${esc(s.name)} · ${fmt(s.amount)}</div><div class="row"><span>Plan</span><span>${esc(s.planName)} (${s.lockDays}d)</span></div>${dailyFor(s) ? `<div class="row"><span>Daily commission</span><span>${fmt(dailyFor(s))}</span></div>` : ""}${s.sentAt ? `<div class="row"><span>Member says</span><span style="color:#6ee7b7;font-weight:800">Money sent</span></div>` : ""}${s.provider ? `<div class="row"><span>Pays with</span><span>${esc(s.provider)} +${esc(s.payerPhone || "")}</span></div>` : ""}<div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div><div class="actions"><button class="btn-small green" data-act="confirmDep" data-id="${s.id}">Money received - confirm</button><button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Reject</button></div></div>`).join("") || `<div class="empty">None</div>`;
-  $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · pay ${fmt(payoutOf(s))}</div><div class="row"><span>Saved</span><span>${fmt(s.amount)}</span></div><div class="row"><span>Commission earned</span><span>${fmt(earnOf(s))}</span></div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
+  $("aWithdraws").innerHTML = allSavings.filter(s => s.status === "withdraw_requested").map(s => `<div class="card"><div class="title">${esc(s.name)} · pay ${fmt(payoutOf(s))}</div>${wdHours() > 0 && dueOf(s) ? `<div class="row"><span>Pay within</span><span class="cdp" style="color:#fcd34d;font-weight:800" data-t="${dueOf(s)}">${cdpText(dueOf(s))}</span></div>` : ""}<div class="row"><span>Saved</span><span>${fmt(s.amount)}</span></div><div class="row"><span>Commission earned</span><span>${fmt(earnOf(s))}</span></div><div class="row"><span>Phone</span><span>+${esc(s.phone)}</span></div><div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div><div class="actions"><button class="btn-small green" data-act="markPaid" data-id="${s.id}">I have paid this out</button></div></div>`).join("") || `<div class="empty">None</div>`;
   $("aNums").innerHTML = adminNumCards(); $(curTab === "tabMachines" ? "mList" : "aPlans").innerHTML = adminPlanCards();
   $("aMembers").innerHTML = users.filter(u => u.status === "approved").map(u => `<div class="card"><div class="row"><span><b style="color:#fff">${esc(u.name)}</b> ${u.role === "admin" ? '<span class="tag active">Admin</span>' : ""}</span><span>+${esc(u.phone)}</span></div>${u.id !== myUid ? `<div class="actions">${u.role !== "admin" ? `<button class="btn-small" data-act="setPw" data-id="${u.id}">Set password</button>` : ""}<button class="btn-small grey" data-act="toggleAdmin" data-id="${u.id}">${u.role === "admin" ? "Remove admin" : "Make admin"}</button><button class="btn-small red" data-act="rejectUser" data-id="${u.id}">Remove</button></div>` : ""}</div>`).join("");
 }
@@ -719,6 +757,11 @@ async function action(act, id, el) {
         }
       };
     }
+    else if (act === "saveWdHours") {
+      const h = Math.floor(Number($("wdHours").value));
+      if (!(h >= 0) || h > 720) return alert("Enter the hours as a number from 0 to 720.");
+      await setDoc(doc(db, "settings", "general"), { withdrawHours: h }, { merge: true }); alert("Saved");
+    }
     else if (act === "saveSupport") {
       let n = $("scPhone").value.replace(/\D/g, ""); if (n.startsWith("0")) n = "256" + n.slice(1);
       if (n && !/^256\d{9}$/.test(n)) return alert("Enter a valid number, e.g. 0772123456");
@@ -769,15 +812,15 @@ async function action(act, id, el) {
         return modal(`<h3>Nothing to withdraw yet</h3><p class="note" style="text-align:left">Your savings can only be withdrawn on their release date.${nxt ? " Your next release is <b>" + dd(nxt) + "</b>." : ""}</p><button class="btn-submit" id="mGo">OK</button>`), $("mGo").onclick = closeModal;
       }
       const tot = rd.reduce((t, x) => t + payoutOf(x), 0);
-      if (confirm(`Request withdrawal of ${fmt(tot)} (savings plus commission)? The admin will pay you out.`))
+      if (confirm(`Request withdrawal of ${fmt(tot)} (savings plus commission)? ${wdHours() > 0 ? "The money reaches you about " + wdHours() + " hour(s) after you request." : "The admin will pay you out."}`))
         for (const x of rd) await updateDoc(doc(db, "savings", x.id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() });
     }
-    else if (act === "reqWithdraw") { if (confirm("Request your withdrawal now?")) await updateDoc(doc(db, "savings", id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() }); }
+    else if (act === "reqWithdraw") { if (confirm("Request your withdrawal now?" + (wdHours() > 0 ? " The money reaches you about " + wdHours() + " hour(s) after you request." : ""))) await updateDoc(doc(db, "savings", id), { status: "withdraw_requested", withdrawRequestedAt: serverTimestamp() }); }
     else if (act === "confirmDep") {
       const s = allSavings.find(x => x.id === id);
       if (confirm(`Confirm that ${fmt(s.amount)} was received from ${s.name}?`))
       { const pl = plans.find(x => x.id === s.planId), daily = pl && pl.dailyAmount && pl.minAmount ? Math.round(Number(pl.dailyAmount) * Number(s.amount) / Number(pl.minAmount)) : 0;
-        await updateDoc(doc(db, "savings", id), { status: "active", activatedAt: serverTimestamp(), releaseAt: Timestamp.fromDate(new Date(Date.now() + s.lockDays * 86400000)), confirmedBy: myUid, dailyAmount: daily }); }
+        await updateDoc(doc(db, "savings", id), { status: "active", activatedAt: Timestamp.fromMillis(now()), releaseAt: Timestamp.fromMillis(dayStart(now()) + Number(s.lockDays) * 864e5), confirmedBy: myUid, dailyAmount: daily }); }
     }
     else if (act === "markPaid") { if (confirm("Confirm you have paid this member?")) await updateDoc(doc(db, "savings", id), { status: "paid", paidAt: serverTimestamp(), paidBy: myUid }); }
     else if (act === "approveUser") {
