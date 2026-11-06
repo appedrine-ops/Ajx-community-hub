@@ -299,6 +299,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aHeld">0</div><div class="stat-label">Held by group</div></div><div class="stat-card"><div class="stat-val" id="aOwed">0</div><div class="stat-label">Withdrawals due</div></div></div>
     <div class="card"><div class="title">New member sign-up</div><p class="note" id="autoNote" style="text-align:left"></p><div class="series-bar" style="padding-bottom:0;margin:0"><button class="series-chip" id="modeAuto" data-act="setMode" data-id="auto">Auto register</button><button class="series-chip" id="modeWait" data-act="setMode" data-id="wait">Wait for my approval</button></div><div class="actions" style="margin-top:10px"><button class="btn-small grey" data-act="checkSetup">Check app setup</button></div><div class="note" data-ver style="text-align:left;font-size:.8rem"></div></div>
     <div class="card"><div class="title">Withdrawal processing time</div><p class="note" style="text-align:left">How many hours after a member asks to withdraw before the money reaches them. Members see a countdown.</p><input class="input-field plain" id="wdHours" type="number" inputmode="numeric" placeholder="7"><div class="actions"><button class="btn-small" data-act="saveWdHours">Save hours</button></div></div>
+    <div class="card"><div class="title">Release dates</div><p class="note" style="text-align:left">Older deposits were counted in 24-hour blocks. Tap to make them follow the midnight rule: a day ends at 12:00 am, Uganda time.</p><div class="actions"><button class="btn-small" data-act="recalcRelease">Update release dates</button></div></div>
     <div class="card"><div class="title">Support phone for members</div><p class="note" style="text-align:left">Members tap the Admin icon on My to call or WhatsApp this number.</p><input class="input-field plain" id="scPhone" type="tel" inputmode="numeric" placeholder="0772123456"><div class="actions"><button class="btn-small" data-act="saveSupport">Save</button></div></div>
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aEarn">0</div><div class="stat-label">Commission earned (all)</div></div><div class="stat-card"><div class="stat-val" id="aDay">0</div><div class="stat-label">Commission per day (all)</div></div></div>
     <div class="sec">Password reset requests</div><div id="aResets"></div>
@@ -366,7 +367,7 @@ function resetIdle() {
   if (!keep) idleT = setTimeout(() => { if (me) signOut(auth); }, 15 * 60 * 1000);
 }
 ["click", "touchstart", "keydown", "scroll"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
-const APP_VERSION = "2026-11-05 b";
+const APP_VERSION = "2026-11-06 a";
 document.querySelectorAll("[data-ver]").forEach(e => { e.textContent = "Version " + APP_VERSION; });
 const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
 
@@ -526,7 +527,7 @@ const now = () => Date.now() + clockOff;
 const EAT_MS = 3 * 36e5;
 const dayStart = t => Math.floor((t + EAT_MS) / 864e5) * 864e5 - EAT_MS;
 const eatDate = t => new Date(t).toLocaleDateString([], { dateStyle: "medium", timeZone: "Africa/Kampala" });
-async function syncClock() { try { const t0 = Date.now(), r = await fetch(location.pathname, { method: "HEAD", cache: "no-store" }), t1 = Date.now(), d = r.headers.get("date"); if (d) { const off = new Date(d).getTime() - (t0 + t1) / 2; if (Math.abs(off) < 6048e5) clockOff = off; } } catch (e) { } }
+async function syncClock() { try { const t0 = Date.now(), r = await fetch(location.pathname, { method: "HEAD", cache: "no-store" }), t1 = Date.now(), d = r.headers.get("date"), age = Number(r.headers.get("age") || 0); if (d) { const off = new Date(d).getTime() + age * 1000 - (t0 + t1) / 2; clockOff = Math.abs(off) <= 600000 ? off : 0; } } catch (e) { } }
 syncClock(); setInterval(syncClock, 600000);
 const cdText = t => { const d = t - now(); if (d <= 0) return "Ready"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 864e5)}d ${z(Math.floor(d % 864e5 / 36e5))}:${z(Math.floor(d % 36e5 / 6e4))}:${z(Math.floor(d % 6e4 / 1e3))}`; };
 setInterval(() => document.querySelectorAll(".cd").forEach(e => { e.textContent = cdText(Number(e.dataset.t)); }), 1000);
@@ -786,6 +787,13 @@ async function action(act, id, el) {
           $("mErr").textContent = err.code === "functions/not-found" || err.code === "functions/internal" && !err.message.includes("Password") ? "The password service is not switched on yet. See the steps to deploy it." : (err.message || "Could not set the password.");
         }
       };
+    }
+    else if (act === "recalcRelease") {
+      const fixes = allSavings.filter(x => x.status === "active" && ms(x.releaseAt)).map(x => { const st = ms(x.activatedAt) || (ms(x.releaseAt) - Number(x.lockDays) * 864e5); return { x, rel: dayStart(st) + Number(x.lockDays) * 864e5 }; }).filter(f => f.rel !== ms(f.x.releaseAt));
+      if (!fixes.length) return alert("All release dates already follow the midnight rule.");
+      if (!confirm("Update " + fixes.length + " deposit(s) to the midnight rule?")) return;
+      for (const f of fixes) await updateDoc(doc(db, "savings", f.x.id), { releaseAt: Timestamp.fromMillis(f.rel) });
+      alert("Done. " + fixes.length + " deposit(s) updated.");
     }
     else if (act === "saveWdHours") {
       const h = Math.floor(Number($("wdHours").value));
