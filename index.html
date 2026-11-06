@@ -66,7 +66,7 @@ h2.t{text-align:center;margin:8px 0 14px}
 .card .row span:first-child{color:var(--text-muted)}
 .card .actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.78rem;font-weight:700;background:#334155}
-.tag.awaiting{background:#92400e}.tag.active{background:#065f46}.tag.ready{background:#1d4ed8}.tag.paid{background:#475569}.tag.cancelled,.tag.withdraw_requested{background:#7c2d12}
+.tag.awaiting{background:#92400e}.tag.active{background:#065f46}.tag.ready{background:#1d4ed8}.tag.paid{background:#047857}.tag.cancelled{background:#7c2d12}.tag.withdraw_requested{background:#b45309}
 .empty{text-align:center;color:var(--text-muted);padding:22px 8px}
 .note{color:var(--text-muted);font-size:.85rem;text-align:center;margin:10px 0 18px;line-height:1.4}
 .raffle-wheel-box{border:1px solid var(--border-color);border-radius:12px;padding:18px;text-align:center}
@@ -116,6 +116,7 @@ h2.t{text-align:center;margin:8px 0 14px}
 #splash{position:fixed;inset:0;z-index:9999;pointer-events:none;animation:splOut .5s ease 2.6s forwards;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(circle at 50% 38%,#12306b 0,#050b1f 70%);transition:opacity .5s}#splash.hide{opacity:0;pointer-events:none}#splash svg{border-radius:30px;box-shadow:0 0 50px rgba(56,189,248,.55);animation:spl 1.4s ease-in-out infinite}#splash b{color:#fff;font-size:1.5rem;letter-spacing:.5px}#splash small{color:#7dd3fc;font-size:.95rem}@keyframes splOut{to{opacity:0;visibility:hidden}}@keyframes spl{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 .pbar{height:8px;border-radius:6px;background:#1e293b;margin:6px 0 8px;overflow:hidden}.pfill{height:100%;background:linear-gradient(90deg,#38bdf8,#34d399);border-radius:6px;transition:width .6s}
 .gd{background:#0b1220;border:1px solid #1e293b;border-radius:14px;margin-bottom:10px;padding:0 14px}.gd summary{padding:14px 0;color:#fff;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;list-style:none}.gd summary::-webkit-details-marker{display:none}.gd summary i{width:34px;height:34px;border-radius:10px;background:#1e3a8a;color:#93c5fd;display:flex;align-items:center;justify-content:center;flex:0 0 auto}.gd summary::after{content:'+';margin-left:auto;color:#7dd3fc;font-size:1.3rem}.gd[open] summary::after{content:'−'}.gd .gb{padding:0 0 14px;color:#94a3b8;line-height:1.55;font-size:.95rem}.gd .gb p{margin:0 0 8px}.gd .gb b{color:#e2e8f0}
+.flow{display:flex;margin:10px 0 6px}.flow div{flex:1;text-align:center;font-size:.68rem;color:#64748b}.flow i{display:block;width:24px;height:24px;border-radius:50%;background:#1e293b;margin:0 auto 4px;line-height:24px;font-style:normal;font-size:.75rem;color:#94a3b8}.flow .done i{background:#0e7490;color:#fff}.flow .done{color:#7dd3fc}.flow .cur i{background:#38bdf8;color:#03111f;box-shadow:0 0 0 4px rgba(56,189,248,.25)}.flow .cur{color:#e2e8f0;font-weight:700}
 .sec{font-size:1.1rem;font-weight:700;margin:20px 0 10px;color:var(--accent-yellow)}
 </style>
 </head>
@@ -193,6 +194,10 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="grid-2">
       <div class="stat-card"><div class="stat-val" id="hAwait">0</div><div class="stat-label">Awaiting confirmation</div></div>
       <div class="stat-card"><div class="stat-val" id="hPaid">0</div><div class="stat-label">Withdrawn so far</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-val" id="hPend">0</div><div class="stat-label">Payout pending</div></div>
+      <div class="stat-card"><div class="stat-val" id="hTotal">0</div><div class="stat-label">Total savings</div></div>
     </div>
     <div class="grid-2">
       <div class="stat-card"><div class="stat-val" id="hEarn">0</div><div class="stat-label">Commission earned</div></div>
@@ -367,7 +372,7 @@ function resetIdle() {
   if (!keep) idleT = setTimeout(() => { if (me) signOut(auth); }, 15 * 60 * 1000);
 }
 ["click", "touchstart", "keydown", "scroll"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
-const APP_VERSION = "2026-11-06 a";
+const APP_VERSION = "2026-11-06 b";
 document.querySelectorAll("[data-ver]").forEach(e => { e.textContent = "Version " + APP_VERSION; });
 const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
 
@@ -539,6 +544,10 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-copy
 const wdHours = () => Number(general.withdrawHours || 0);
 const dueOf = s => ms(s.withdrawRequestedAt) ? ms(s.withdrawRequestedAt) + wdHours() * 36e5 : 0;
 const cdpText = t => { const d = t - now(); if (d <= 0) return "Due now"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 36e5)}h ${z(Math.floor(d % 36e5 / 6e4))}m ${z(Math.floor(d % 6e4 / 1e3))}s`; };
+const FLOW = ["Request", "Sent", "Active", "Ready", "Payout", "Paid"];
+const flowStep = s => s.status === "cancelled" ? -1 : s.status === "paid" ? 5 : s.status === "withdraw_requested" ? 4 : s.status === "active" ? (isReady(s) ? 3 : 2) : s.sentAt ? 1 : 0;
+const FLOW_NOTE = ["Send the money to the number shown, then tap I have sent the money.", "Waiting for the admin to confirm your money.", "Your days are counting. Withdraw opens on the release date.", "Ready. Tap Withdraw on the Home screen.", "Withdrawal requested. The admin will pay your phone.", "Paid out. Thank you."];
+const flowHtml = s => { const c = flowStep(s); if (c < 0) return ""; return `<div class="flow">${FLOW.map((n, i) => `<div class="${i < c || (c === 5 && i === 5) ? "done" : i === c ? "cur" : ""}"><i>${i < c || (c === 5 && i === 5) ? "✓" : i + 1}</i>${n}</div>`).join("")}</div><div class="note" style="text-align:left;margin:0 0 8px">${FLOW_NOTE[c]}</div>`; };
 const earnOf = s => { const d = Number(s.dailyAmount || 0); return d && ["active", "withdraw_requested", "paid"].includes(s.status) ? d * dayOf(s) : 0; };
 const dailyFor = s => { const pl = plans.find(x => x.id === s.planId); return pl && pl.dailyAmount && pl.minAmount ? Math.round(Number(pl.dailyAmount) * Number(s.amount) / Number(pl.minAmount)) : 0; };
 const payoutOf = s => Number(s.amount) + earnOf(s);
@@ -576,7 +585,7 @@ function renderAllNow() {
   const bL = sum(mySavings, s => s.status === "active" && !isReady(s)), bR = sum(mySavings, isReady), bP = sum(mySavings, s => s.status === "withdraw_requested");
   { const dues = mySavings.filter(x => x.status === "withdraw_requested" && dueOf(x)).map(dueOf).sort((a, b) => a - b);
     $("bPayWrap").style.display = wdHours() > 0 && dues.length ? "block" : "none"; if (dues.length) { $("bPay").dataset.t = dues[0]; $("bPay").textContent = cdpText(dues[0]); } }
-  $("bLocked").textContent = fmt(bL); $("bReady").textContent = fmt(bR); $("bPend").textContent = fmt(bP); $("bTotal").textContent = fmt(bL + bR + bP);
+  $("bLocked").textContent = fmt(bL); $("bReady").textContent = fmt(bR); $("bPend").textContent = fmt(bP); $("bTotal").textContent = fmt(bL + bR + bP); $("hPend").textContent = fmt(bP); $("hTotal").textContent = fmt(bL + bR + bP);
   $("hReady").textContent = fmt(sum(mySavings, isReady));
   $("hAwait").textContent = fmt(sum(mySavings, s => s.status === "awaiting"));
   $("hPaid").textContent = fmt(sum(mySavings, s => s.status === "paid"));
@@ -674,13 +683,14 @@ function renderRecords() {
     if (s.status === "awaiting") btns = (s.sentAt ? "" : `<button class="btn-small green" data-act="sentMoney" data-id="${s.id}">I have sent the money</button>`) + `<button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Cancel</button>`;
     if (st === "ready") btns = `<button class="btn-small green" data-act="reqWithdraw" data-id="${s.id}">Request withdrawal</button>`;
     return `<div class="card"><div class="title">${esc(s.planName)} <span class="tag ${st}">${stateText(s)}</span></div>
+      ${flowHtml(s)}
       <div class="row"><span>Amount</span><span>${fmt(s.amount)}</span></div>
       <div class="row"><span>Lock</span><span>${s.lockDays} days</span></div>
       <div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div>
       ${s.status === "awaiting" ? `<div class="note" style="text-align:left;margin:8px 0 4px">${s.sentAt ? "You said you sent the money. Waiting for the admin to confirm." : "Send " + fmt(s.amount) + " to:"}</div>${s.sentAt ? "" : payToList(s.provider)}` : ""}
       ${ms(s.releaseAt) ? `<div class="row"><span>Release date</span><span>${dt(s.releaseAt)}</span></div>` : ""}
       ${s.dailyAmount && ["active", "withdraw_requested", "paid"].includes(s.status) ? `<div class="row"><span>Daily commission</span><span>${fmt(s.dailyAmount)}</span></div><div class="row"><span>Commission earned</span><span class="earn" style="color:#6ee7b7;font-weight:800" data-id="${s.id}">${fmt(earnOf(s))}</span></div><div class="row"><span>Day</span><span class="dayn" style="color:#7dd3fc;font-weight:800" data-id="${s.id}">Day ${dayOf(s)} of ${s.lockDays}</span></div><div class="pbar"><div class="pfill" data-id="${s.id}" style="width:${Math.round(dayOf(s) / Number(s.lockDays) * 100)}%"></div></div><div class="row"><span>Days left</span><span class="dleft" data-id="${s.id}">${Number(s.lockDays) - dayOf(s)}</span></div><div class="row"><span>Started</span><span>${eatDate(startOf(s))}</span></div><div class="row"><span>Last day</span><span>${eatDate(dayStart(startOf(s)) + (Number(s.lockDays) - 1) * 864e5)}</span></div><div class="row"><span>You receive at release</span><span>${fmt(Number(s.amount) + Number(s.dailyAmount) * Number(s.lockDays))}</span></div>` : ""}
-      ${s.status === "withdraw_requested" && wdHours() > 0 && dueOf(s) ? `<div class="row"><span>Money reaches you in</span><span class="cdp" style="color:#fcd34d;font-weight:800" data-t="${dueOf(s)}">${cdpText(dueOf(s))}</span></div>` : ""}
+      ${s.status === "withdraw_requested" ? (wdHours() > 0 && dueOf(s) ? `<div class="row"><span>Money reaches you in</span><span class="cdp" style="color:#fcd34d;font-weight:800" data-t="${dueOf(s)}">${cdpText(dueOf(s))}</span></div>` : `<div class="row"><span>Payout</span><span style="color:#fcd34d;font-weight:800">Waiting for the admin</span></div>`) + `<div class="row"><span>You will receive</span><span>${fmt(payoutOf(s))}</span></div>` : ""}
       ${s.status === "active" && ms(s.releaseAt) ? `<div class="row"><span>Time left</span><span class="cd" style="color:#fcd34d;font-weight:800" data-t="${ms(s.releaseAt)}">${cdText(ms(s.releaseAt))}</span></div>` : ""}
       ${s.status === "paid" ? `<div class="row"><span>Paid out</span><span>${dt(s.paidAt)}</span></div>` : ""}
       ${btns ? `<div class="actions">${btns}</div>` : ""}</div>`;
@@ -846,8 +856,11 @@ async function action(act, id, el) {
     else if (act === "withdrawAll") {
       const rd = mySavings.filter(isReady);
       if (!rd.length) {
-        const nxt = mySavings.filter(x => x.status === "active").map(x => ms(x.releaseAt)).sort((a, b) => a - b)[0];
-        return modal(`<h3>Nothing to withdraw yet</h3><p class="note" style="text-align:left">Your savings can only be withdrawn on their release date.${nxt ? " Your next release is <b>" + dd(nxt) + "</b>." : ""}</p><button class="btn-submit" id="mGo">OK</button>`), $("mGo").onclick = closeModal;
+        const pend = mySavings.filter(x => x.status === "withdraw_requested"), nxt = mySavings.filter(x => x.status === "active").map(x => ms(x.releaseAt)).sort((a, b) => a - b)[0];
+        const dues = pend.filter(dueOf).map(dueOf).sort((a, b) => a - b);
+        const title = pend.length ? "Withdrawal already requested" : nxt ? "Not ready yet" : "Nothing to withdraw";
+        const body = pend.length ? `<p class="note" style="text-align:left">You already asked to withdraw <b>${fmt(pend.reduce((t, x) => t + payoutOf(x), 0))}</b>.</p><p class="note" style="text-align:left">${wdHours() > 0 && dues.length ? "It reaches your phone in <b class=\"cdp\" data-t=\"" + dues[0] + "\">" + cdpText(dues[0]) + "</b>." : "The admin will pay it to your phone."}</p>` : nxt ? `<p class="note" style="text-align:left">Your savings can only be withdrawn on their release date: <b>${dd(nxt)}</b>.</p><p class="note" style="text-align:left">Time left: <b class="cd" data-t="${nxt}">${cdText(nxt)}</b></p>` : `<p class="note" style="text-align:left">You have no savings yet. Tap Deposit to choose a machine.</p>`;
+        return modal(`<h3>${title}</h3>${body}<button class="btn-submit" id="mGo">OK</button>`), $("mGo").onclick = closeModal;
       }
       const tot = rd.reduce((t, x) => t + payoutOf(x), 0);
       if (confirm(`Request withdrawal of ${fmt(tot)} (savings plus commission)? ${wdHours() > 0 ? "The money reaches you about " + wdHours() + " hour(s) after you request." : "The admin will pay you out."}`))
