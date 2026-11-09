@@ -223,7 +223,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <details class="gd"><summary><i class="fa-solid fa-circle-check"></i>5. After your deposit is confirmed</summary><div class="gb"><p>Your money moves to <b>Locked savings</b>, and <b>Day 1</b> starts on the day it is confirmed, even if that is late at night.</p><p>A new day starts every midnight (Uganda time), and your commission grows each day.</p></div></details>
     <details class="gd"><summary><i class="fa-solid fa-clock-rotate-left"></i>6. Follow your progress in Records</summary><div class="gb"><p>Open <b>Records</b> to see every deposit. For each active machine you can see <b>Day 12 of 125</b>, a progress bar, the days left, the commission earned, the amount you will receive at the end, and a live countdown.</p></div></details>
     <details class="gd"><summary><i class="fa-solid fa-hand-holding-dollar"></i>7. Withdraw your money</summary><div class="gb"><p>When the countdown ends, your money becomes <b>Ready</b>. Tap <b>Withdraw</b> on the Home screen and confirm.</p><p>It then shows as <b>Payout pending</b> with a countdown to when the money reaches your phone. When it is paid, it moves to <b>Withdrawn so far</b>.</p></div></details>
-    <details class="gd"><summary><i class="fa-solid fa-dharmachakra"></i>8. Raffle, chat and notices</summary><div class="gb"><p>On the <b>Raffle</b> tab you can see the prize range and the winners of past draws.</p><p>The <b>Chats</b> tab shows messages posted by the admin. You can read them there.</p><p><b>Notices</b> on the Home screen show important announcements.</p></div></details>
+    <details class="gd"><summary><i class="fa-solid fa-dharmachakra"></i>8. Raffle, chat and notices</summary><div class="gb"><p>On the <b>Raffle</b> tab you earn <b>one chance for every confirmed deposit</b>. The prize depends on how big that deposit is, and the prize levels are listed there. Tap <b>Play my chance</b> and the wheel spins.</p><p>The <b>Chats</b> tab shows messages posted by the admin. You can read them there.</p><p><b>Notices</b> on the Home screen show important announcements.</p></div></details>
     <details class="gd"><summary><i class="fa-solid fa-lock"></i>9. Keep your account safe</summary><div class="gb"><p>Never share your password or your mobile money PIN with anyone.</p><p>Only send money to the numbers shown inside this app.</p><p>Change your password any time at <b>My, then Password</b>, and always <b>Sign out</b> on a phone that is not yours.</p></div></details>
     <details class="gd"><summary><i class="fa-solid fa-download"></i>10. Put the app on your phone</summary><div class="gb"><p>Open <b>My</b> and tap <b>Download App</b>, or open the browser menu (the three dots) and choose <b>Add to Home screen</b>. The app then opens like any other app on your phone.</p></div></details>
   </div>
@@ -232,17 +232,24 @@ h2.t{text-align:center;margin:8px 0 14px}
   <div id="tabRaffle" class="tab-content" style="display:none">
     <h2 class="t">Group Raffle</h2>
     <div class="raffle-wheel-box">
-      <p style="color:var(--accent-cyan)">Fun raffles run by the admin. Nothing is paid to enter.</p>
+      <p style="color:var(--accent-cyan)">You earn one chance for every confirmed deposit. The prize depends on how big that deposit is.</p>
       <div class="wheel-container-wrap"><div class="wheel-pointer"></div><div class="wheel-container"><div class="wheel-disc" id="wheelDisc"></div></div></div>
-      <p id="raffleInfo" style="color:#fff;font-weight:700"></p>
-      <div id="drawAdmin" style="display:none;text-align:left"><label>Start amount (lowest prize, UGX)</label><input class="input-field plain" id="rfMin" type="number" inputmode="numeric" placeholder="5000"><label>Final amount (highest prize, UGX)</label><input class="input-field plain" id="rfMax" type="number" inputmode="numeric" placeholder="50000"><button class="btn-small" id="rfSave" style="margin:8px 0 12px">Save raffle amounts</button><input class="input-field plain" id="drawPrize" placeholder="Prize note (optional)" style="margin-bottom:8px"><button class="btn-spin" id="spinBtn">SPIN THE RAFFLE</button></div>
+      <p id="raffleStatus" style="color:#fff;font-weight:700"></p>
+      <button class="btn-spin" id="playBtn">PLAY MY CHANCE</button>
       <p id="raffleResult" style="margin-top:14px;font-weight:bold;color:var(--accent-yellow)"></p>
     </div>
-    <div class="sec">Past raffles</div><div id="drawList"></div>
+    <div class="sec">Prize levels</div><div id="tierList"></div>
+    <div id="raffleAdmin" style="display:none">
+      <div class="sec">Raffle controls (admin)</div>
+      <div class="card"><div class="title" id="rfState"></div><div class="actions"><button class="btn-small" data-act="rfToggle" id="rfToggleBtn">Open</button><button class="btn-small" data-act="rfAddTier">+ Add prize level</button></div></div>
+      <div class="sec">Prizes to pay</div><div id="prizeList"></div>
+    </div>
+    <div class="sec">Recent winners</div><div id="drawAdminBar" style="display:none;text-align:right;margin-bottom:8px"><button class="btn-small red" data-act="clearDraws">Clear winners list</button></div><div id="drawList"></div>
   </div>
 
   <div id="tabChats" class="tab-content" style="display:none">
     <h2 class="t">Group chat</h2>
+    <div id="chatAdmin" style="display:none;text-align:right;margin-bottom:8px"><button class="btn-small red" data-act="clearChat">Clear chat</button></div>
     <div class="chat-box" id="chatBox"></div>
     <p class="note" id="chatReadOnly" style="display:none">Only the admin posts here. You can read the messages.</p>
     <form class="chat-send" id="chatForm"><input class="input-field plain" id="chatText" placeholder="Write a message" autocomplete="off"><button class="btn-small" style="padding:0 18px"><i class="fa-solid fa-paper-plane"></i></button></form>
@@ -312,6 +319,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aHeld">0</div><div class="stat-label">Held by group</div></div><div class="stat-card"><div class="stat-val" id="aOwed">0</div><div class="stat-label">Withdrawals due</div></div></div>
     <div class="card"><div class="title">New member sign-up</div><p class="note" id="autoNote" style="text-align:left"></p><div class="series-bar" style="padding-bottom:0;margin:0"><button class="series-chip" id="modeAuto" data-act="setMode" data-id="auto">Auto register</button><button class="series-chip" id="modeWait" data-act="setMode" data-id="wait">Wait for my approval</button></div><div class="actions" style="margin-top:10px"><button class="btn-small grey" data-act="checkSetup">Check app setup</button></div><div class="note" data-ver style="text-align:left;font-size:.8rem"></div></div>
     <div class="card"><div class="title">Withdrawal processing time</div><p class="note" style="text-align:left">How many hours after a member asks to withdraw before the money reaches them. Members see a countdown.</p><input class="input-field plain" id="wdHours" type="number" inputmode="numeric" placeholder="7"><div class="actions"><button class="btn-small" data-act="saveWdHours">Save hours</button></div></div>
+    <div class="card"><div class="title">Clean up</div><p class="note" style="text-align:left">Removes every cancelled deposit request from the app. It does not touch confirmed deposits, payouts or receipts.</p><div class="actions"><button class="btn-small red" data-act="clearCancelled">Delete cancelled requests</button></div></div>
     <div class="card"><div class="title">Release dates</div><p class="note" style="text-align:left">Older deposits were counted in 24-hour blocks. Tap to make them follow the midnight rule: a day ends at 12:00 am, Uganda time.</p><div class="actions"><button class="btn-small" data-act="recalcRelease">Update release dates</button></div></div>
     <div class="card"><div class="title">Support phone for members</div><p class="note" style="text-align:left">Members tap the Admin icon on My to call or WhatsApp this number.</p><input class="input-field plain" id="scPhone" type="tel" inputmode="numeric" placeholder="0772123456"><div class="actions"><button class="btn-small" data-act="saveSupport">Save</button></div></div>
     <div class="grid-2"><div class="stat-card"><div class="stat-val" id="aEarn">0</div><div class="stat-label">Commission earned (all)</div></div><div class="stat-card"><div class="stat-val" id="aDay">0</div><div class="stat-label">Commission per day (all)</div></div></div>
@@ -380,11 +388,12 @@ function resetIdle() {
   if (!keep) idleT = setTimeout(() => { if (me) signOut(auth); }, 15 * 60 * 1000);
 }
 ["click", "touchstart", "keydown", "scroll"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
-const APP_VERSION = "2026-11-08 a";
+const APP_VERSION = "2026-11-09 b";
 document.querySelectorAll("[data-ver]").forEach(e => { e.textContent = "Version " + APP_VERSION; });
 const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
 
 let me = null, myUid = null, isAdmin = false;
+let myPlays = [], prizes = [];
 let ledger = [], payNums = {}, general = {}, avatars = {}, raffleCfg = {};
 let uRecent = [], uPending = [], uFound = [], memberCount = null, ledgerTotals = null;
 let resets = [], mySavings = [], allSavings = [], plans = [], users = [], notices = [], messages = [], draws = [];
@@ -532,8 +541,8 @@ const mergeUsers = () => { const m = new Map(); [...uFound, ...uPending, ...uRec
 async function refreshCount() { try { const r = await getCountFromServer(query(collection(db, "users"), where("status", "==", "approved"))); memberCount = r.data().count; renderAll(); } catch (e) { dbErr(e); } }
 async function loadLedgerTotals() {
   try {
-    const [a, b] = await Promise.all([getAggregateFromServer(query(collection(db, "ledger"), where("type", "==", "deposit")), { total: fsSum("amount"), n: fsCount() }), getAggregateFromServer(query(collection(db, "ledger"), where("type", "==", "payout")), { total: fsSum("total"), n: fsCount() })]);
-    ledgerTotals = { inn: a.data().total || 0, out: b.data().total || 0, n: a.data().n + b.data().n }; renderLedger();
+    const [a, b, c] = await Promise.all([getAggregateFromServer(query(collection(db, "ledger"), where("type", "==", "deposit")), { total: fsSum("amount"), n: fsCount() }), getAggregateFromServer(query(collection(db, "ledger"), where("type", "==", "payout")), { total: fsSum("total"), n: fsCount() }), getAggregateFromServer(query(collection(db, "ledger"), where("type", "==", "prize")), { total: fsSum("amount"), n: fsCount() })]);
+    ledgerTotals = { inn: a.data().total || 0, out: (b.data().total || 0) + (c.data().total || 0), n: a.data().n + b.data().n + c.data().n }; renderLedger();
   } catch (e) { dbErr(e); }
 }
 let started = false;
@@ -542,7 +551,7 @@ function startApp() {
   started = true;
   show("dashContainer"); openTab("tabHome");
   document.querySelectorAll(".adminOnly").forEach(x => x.style.display = isAdmin ? "" : "none");
-  $("drawAdmin").style.display = isAdmin ? "block" : "none";
+  $("raffleAdmin").style.display = isAdmin ? "block" : "none";
   if (isAdmin) {
     unsubs.push(onSnapshot(query(collection(db, "savings"), where("status", "in", ["awaiting", "active", "withdraw_requested"])), s => { allSavings = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, dbErr));
     unsubs.push(onSnapshot(query(collection(db, "savings"), where("phone", "==", me.phone)), s => { mySavings = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, dbErr));
@@ -555,7 +564,9 @@ function startApp() {
   unsubs.push(onSnapshot(collection(db, "plans"), s => { plans = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, dbErr));
   unsubs.push(onSnapshot(query(collection(db, "notices"), orderBy("at", "desc"), limit(20)), s => { notices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }, dbErr));
   unsubs.push(onSnapshot(query(collection(db, "messages"), orderBy("at", "desc"), limit(30)), s => { messages = s.docs.map(d => ({ id: d.id, ...d.data() })).reverse(); renderChat(); }, dbErr));
-  unsubs.push(onSnapshot(query(collection(db, "draws"), orderBy("at", "desc"), limit(10)), s => { draws = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderDraws(); }, dbErr));
+  unsubs.push(onSnapshot(query(collection(db, "raffleSpins"), where("uid", "==", myUid), limit(200)), s => { myPlays = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRaffle(); }, dbErr));
+  unsubs.push(onSnapshot(query(collection(db, "raffleSpins"), orderBy("at", "desc"), limit(10)), s => { draws = s.docs.map(d => ({ id: d.id, winnerName: d.data().name, ...d.data() })); renderDraws(); }, dbErr));
+  if (isAdmin) unsubs.push(onSnapshot(query(collection(db, "raffleSpins"), where("paid", "==", false), limit(100)), s => { prizes = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRaffle(); }, dbErr));
   if (isAdmin) unsubs.push(onSnapshot(query(collection(db, "resetRequests"), limit(50)), s => { resets = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }, dbErr));
   if (isAdmin) {
     unsubs.push(onSnapshot(query(collection(db, "users"), orderBy("createdAt", "desc"), limit(200)), s => { uRecent = s.docs.map(d => ({ id: d.id, ...d.data() })); mergeUsers(); renderAll(); }, dbErr));
@@ -591,6 +602,7 @@ async function nextRef() {
 const receiptLines = e => {
   const L = [["Reference", e.ref], ["Date", dt(e.createdAt)], ["Member", e.name], ["Phone", "+" + e.phone], ["Machine", e.planName || "-"]];
   if (e.type === "deposit") L.push(["Amount received", fmt(e.amount)], ["Paid by", (e.provider === "AIRTEL" ? "Airtel Money" : "MTN MoMo") + (e.payerPhone ? " +" + e.payerPhone : "")], ["Lock period", e.lockDays + " days"], ["Daily commission", fmt(e.dailyAmount || 0)], ["First day", eatDate(e.startDay)], ["Last day", eatDate(e.lastDay)]);
+  else if (e.type === "prize") L.push(["Raffle prize", fmt(e.amount)], ["Total paid", fmt(e.total)]);
   else L.push(["Savings returned", fmt(e.amount)], ["Commission", fmt(e.commission || 0)], ["Total paid", fmt(e.total)]);
   L.push(["Confirmed by", e.byName || "Admin"]);
   return L;
@@ -607,7 +619,7 @@ function receiptCanvas(e) {
   g.fillStyle = "#0B1B3A"; g.font = "bold 46px sans-serif"; g.textAlign = "left"; g.fillText("AJX Savings Hub", 230, 125);
   g.fillStyle = "#64748b"; g.font = "30px sans-serif"; g.fillText("OFFICIAL RECEIPT", 230, 170);
   const dep = e.type === "deposit"; g.fillStyle = dep ? "#047857" : "#1d4ed8"; rr(70, 240, W - 140, 90, 20); g.fill();
-  g.fillStyle = "#fff"; g.font = "bold 40px sans-serif"; g.textAlign = "center"; g.fillText(dep ? "DEPOSIT RECEIVED" : "PAYOUT PAID", W / 2, 298);
+  g.fillStyle = "#fff"; g.font = "bold 40px sans-serif"; g.textAlign = "center"; g.fillText(dep ? "DEPOSIT RECEIVED" : e.type === "prize" ? "RAFFLE PRIZE PAID" : "PAYOUT PAID", W / 2, 298);
   let y = 410; g.textAlign = "left";
   L.forEach(([k, v], i) => {
     g.fillStyle = "#64748b"; g.font = "30px sans-serif"; g.textAlign = "left"; g.fillText(k, 80, y);
@@ -634,7 +646,7 @@ function renderLedger() {
     $("lgTotals").innerHTML = `<div class="grid-2"><div class="stat-card"><div class="stat-val">${fmt(inn)}</div><div class="stat-label">Money in (deposits)</div></div><div class="stat-card"><div class="stat-val">${fmt(out)}</div><div class="stat-label">Money out (payouts)</div></div></div><div class="grid-2"><div class="stat-card"><div class="stat-val">${fmt(inn - out)}</div><div class="stat-label">Balance held</div></div><div class="stat-card"><div class="stat-val">${nEntries}</div><div class="stat-label">Entries (all time)</div></div></div>`;
   } else $("lgTotals").innerHTML = "";
   const list = ledger.filter(x => !q || [x.ref, x.name, x.phone, x.planName].join(" ").toLowerCase().includes(q));
-  $("lgList").innerHTML = list.map(x => `<div class="card"><div class="title">${esc(x.ref)} <span class="tag ${x.type === "deposit" ? "active" : "ready"}">${x.type === "deposit" ? "Deposit" : "Payout"}</span></div><div class="row"><span>Date</span><span>${dt(x.createdAt)}</span></div>${isAdmin ? `<div class="row"><span>Member</span><span>${esc(x.name)}</span></div>` : ""}<div class="row"><span>Machine</span><span>${esc(x.planName || "-")}</span></div><div class="row"><span>${x.type === "deposit" ? "Amount" : "Total paid"}</span><span style="font-weight:800">${fmt(x.type === "deposit" ? x.amount : x.total)}</span></div><div class="actions"><button class="btn-small" data-act="viewReceipt" data-id="${x.id}">View receipt</button></div></div>`).join("") || `<div class="empty">No receipts yet. They appear here after a deposit is confirmed or a payout is made.</div>`;
+  $("lgList").innerHTML = list.map(x => `<div class="card"><div class="title">${esc(x.ref)} <span class="tag ${x.type === "deposit" ? "active" : "ready"}">${x.type === "deposit" ? "Deposit" : x.type === "prize" ? "Prize" : "Payout"}</span></div><div class="row"><span>Date</span><span>${dt(x.createdAt)}</span></div>${isAdmin ? `<div class="row"><span>Member</span><span>${esc(x.name)}</span></div>` : ""}<div class="row"><span>Machine</span><span>${esc(x.planName || "-")}</span></div><div class="row"><span>${x.type === "deposit" ? "Amount" : "Total paid"}</span><span style="font-weight:800">${fmt(x.type === "deposit" ? x.amount : x.total)}</span></div><div class="actions"><button class="btn-small" data-act="viewReceipt" data-id="${x.id}">View receipt</button></div></div>`).join("") || `<div class="empty">No receipts yet. They appear here after a deposit is confirmed or a payout is made.</div>`;
 }
 const FLOW = ["Request", "Sent", "Active", "Ready", "Payout", "Paid"];
 const flowStep = s => s.status === "cancelled" ? -1 : s.status === "paid" ? 5 : s.status === "withdraw_requested" ? 4 : s.status === "active" ? (isReady(s) ? 3 : 2) : s.sentAt ? 1 : 0;
@@ -694,6 +706,7 @@ function renderAllNow() {
   if (curTab === "tabPlans" || curTab === "tabDeposit") renderPlans();
   if (curTab === "tabRecords") renderRecords();
   if (curTab === "tabLedger") renderLedger();
+  if (curTab === "tabRaffle") renderRaffle();
   if (isAdmin && (curTab === "tabAdmin" || curTab === "tabMachines")) renderAdmin();
 }
 const SERIES = ["All", "A-series", "B-series", "C-series", "D-series"];
@@ -774,6 +787,7 @@ function renderRecords() {
     const st = stateOf(s);
     let btns = "";
     if (s.status === "awaiting") btns = (s.sentAt ? "" : `<button class="btn-small green" data-act="sentMoney" data-id="${s.id}">I have sent the money</button>`) + `<button class="btn-small red" data-act="cancelSav" data-id="${s.id}">Cancel</button>`;
+    if (isAdmin && (s.status === "cancelled" || s.status === "awaiting")) btns += `<button class="btn-small red" data-act="delSaving" data-id="${s.id}">Delete</button>`;
     if (st === "ready") btns = `<button class="btn-small green" data-act="reqWithdraw" data-id="${s.id}">Request withdrawal</button>`;
     return `<div class="card"><div class="title">${esc(s.planName)} <span class="tag ${st}">${stateText(s)}</span></div>
       ${flowHtml(s)}
@@ -809,17 +823,33 @@ function renderAdmin() {
 function renderChat() {
   $("chatForm").style.display = isAdmin ? "flex" : "none";
   $("chatReadOnly").style.display = isAdmin ? "none" : "block";
-  $("chatBox").innerHTML = messages.map(m => { const av = avatars[m.uid], mine = m.uid === myUid; return `<div class="msgrow ${mine ? "me" : ""}">${av ? `<img class="av" src="${av}" alt="">` : `<div class="av">${esc((m.name || "?").charAt(0).toUpperCase())}</div>`}<div class="bubble ${mine ? "me" : ""}"><small>${esc(m.name)}${av || m.admin ? ' <span class="tag active">Admin</span>' : ""}</small>${esc(m.text)}</div></div>`; }).join("") || `<div class="empty">No messages yet</div>`;
+  $("chatAdmin").style.display = isAdmin ? "block" : "none";
+  $("chatBox").innerHTML = messages.map(m => { const av = avatars[m.uid], mine = m.uid === myUid; return `<div class="msgrow ${mine ? "me" : ""}">${av ? `<img class="av" src="${av}" alt="">` : `<div class="av">${esc((m.name || "?").charAt(0).toUpperCase())}</div>`}<div class="bubble ${mine ? "me" : ""}"><small>${esc(m.name)}${av || m.admin ? ' <span class="tag active">Admin</span>' : ""}</small>${esc(m.text)}${isAdmin ? `<div style="text-align:right;margin-top:6px"><button class="btn-small red" data-act="delMsg" data-id="${m.id}" style="padding:2px 10px;font-size:.75rem">Delete</button></div>` : ""}</div></div>`; }).join("") || `<div class="empty">No messages yet</div>`;
   scrollChat();
 }
 function scrollChat() { const b = $("chatBox"); if (b) b.scrollTop = b.scrollHeight; }
+const tierFor = amt => [...(raffleCfg.tiers || [])].sort((a, b) => b.minDeposit - a.minDeposit).find(t => amt >= Number(t.minDeposit));
+const myChances = () => { const played = new Set(myPlays.map(x => x.savingId)); return mySavings.filter(x => ["active", "withdraw_requested", "paid"].includes(x.status) && !played.has(x.id) && tierFor(Number(x.amount))).sort((a, b) => (ms(a.activatedAt) || ms(a.createdAt)) - (ms(b.activatedAt) || ms(b.createdAt))); };
 function renderRaffle() {
-  const lo = Number(raffleCfg.minAmount), hi = Number(raffleCfg.maxAmount);
-  $("raffleInfo").textContent = lo >= 0 && hi > 0 && raffleCfg.maxAmount != null ? "Win between " + fmt(lo) + " and " + fmt(hi) : "";
-  if (isAdmin) { if (document.activeElement !== $("rfMin")) $("rfMin").value = raffleCfg.minAmount ?? ""; if (document.activeElement !== $("rfMax")) $("rfMax").value = raffleCfg.maxAmount ?? ""; }
+  if (!me) return;
+  const c = raffleCfg, tiers = [...(c.tiers || [])].sort((a, b) => a.minDeposit - b.minDeposit), ch = myChances();
+  let st;
+  if (!tiers.length) st = "No prizes have been set yet.";
+  else if (!c.open) st = "The raffle is closed right now." + (ch.length ? " You have " + ch.length + " chance(s) waiting." : "");
+  else if (ch.length) { const t = tierFor(Number(ch[0].amount)); st = "You have " + ch.length + " chance" + (ch.length > 1 ? "s" : "") + ". Next: your deposit of " + fmt(ch[0].amount) + " can win between " + fmt(t.minPrize) + " and " + fmt(t.maxPrize) + "."; }
+  else st = "No chances yet. Every confirmed deposit of " + fmt(tiers[0].minDeposit) + " or more gives you one chance.";
+  $("raffleStatus").textContent = st; $("playBtn").disabled = !(c.open && ch.length);
+  $("tierList").innerHTML = tiers.map((t, i) => `<div class="card"><div class="row"><span>Deposit ${fmt(t.minDeposit)} or more</span><span style="color:#6ee7b7;font-weight:800">${fmt(t.minPrize)} to ${fmt(t.maxPrize)}</span></div>${isAdmin ? `<div class="actions"><button class="btn-small red" data-act="rfDelTier" data-id="${i}">Delete</button></div>` : ""}</div>`).join("") || `<div class="empty">No prize levels yet</div>`;
+  if (isAdmin) {
+    $("rfState").textContent = "Raffle is " + (c.open ? "OPEN" : "CLOSED");
+    $("rfToggleBtn").textContent = c.open ? "Close raffle" : "Open raffle";
+    const unpaid = prizes.filter(x => Number(x.amount) > 0);
+    $("prizeList").innerHTML = unpaid.map(x => { const t = tierFor(Number(x.depositAmount)), ok = t && x.amount >= t.minPrize && x.amount <= t.maxPrize; return `<div class="card"><div class="title">${esc(x.name)} · ${fmt(x.amount)}</div><div class="row"><span>Phone</span><span>+${esc(x.phone)}</span></div><div class="row"><span>Deposit it came from</span><span>${fmt(x.depositAmount)}</span></div><div class="row"><span>Check</span><span style="font-weight:800;color:${ok ? "#6ee7b7" : "#fca5a5"}">${ok ? "Matches the prize level" : "Does not match, check before paying"}</span></div><div class="actions"><button class="btn-small green" data-act="markPrize" data-id="${x.id}">I have paid this prize</button></div></div>`; }).join("") || `<div class="empty">No prizes waiting</div>`;
+  }
 }
 function renderDraws() {
-  $("drawList").innerHTML = draws.map(d => `<div class="card"><div class="title">🎉 ${esc(d.winnerName)}</div>${d.amount ? `<div class="row"><span>Amount won</span><span style="color:#6ee7b7;font-weight:800">${fmt(d.amount)}</span></div>` : ""}<div class="row"><span>Prize</span><span>${esc(d.prize || "-")}</span></div><div class="row"><span>Date</span><span>${dt(d.at)}</span></div></div>`).join("") || `<div class="empty">No raffles yet</div>`;
+  $("drawAdminBar").style.display = isAdmin && draws.length ? "block" : "none";
+  $("drawList").innerHTML = draws.map(d => `<div class="card"><div class="title">🎉 ${esc(d.winnerName)}</div>${d.amount ? `<div class="row"><span>Amount won</span><span style="color:#6ee7b7;font-weight:800">${fmt(d.amount)}</span></div>` : ""}<div class="row"><span>Deposit</span><span>${fmt(d.depositAmount || 0)}</span></div><div class="row"><span>Date</span><span>${dt(d.at)}</span></div>${isAdmin ? `<div class="actions"><button class="btn-small red" data-act="delDraw" data-id="${d.id}">Delete</button></div>` : ""}</div>`).join("") || `<div class="empty">No raffles yet</div>`;
 }
 
 // ---------- actions ----------
@@ -983,8 +1013,52 @@ async function action(act, id, el) {
         await bt.commit();
       } catch (err) { alert("Could not mark as paid. Check the rules are published and try again. (" + (err.code || "error") + ")"); }
     }
+    else if (act === "delMsg") { if (confirm("Delete this message?")) await deleteDoc(doc(db, "messages", id)); }
+    else if (act === "clearChat") {
+      if (!confirm("Delete ALL chat messages? This cannot be undone.")) return;
+      const r = await getDocs(query(collection(db, "messages"), limit(400))); const bt = writeBatch(db); r.docs.forEach(d => bt.delete(d.ref)); await bt.commit(); alert("Chat cleared.");
+    }
+    else if (act === "delDraw") { if (confirm("Delete this winner? That deposit gets its chance back.")) await deleteDoc(doc(db, "raffleSpins", id)); }
+    else if (act === "rfToggle") await setDoc(doc(db, "settings", "raffle"), { open: !raffleCfg.open }, { merge: true });
+    else if (act === "rfAddTier") {
+      modal(`<h3>Add a prize level</h3><label>Deposit of at least (UGX)</label><input id="tMin" type="number" inputmode="numeric" class="input-field plain" placeholder="30000"><label>Lowest prize (UGX)</label><input id="tLo" type="number" inputmode="numeric" class="input-field plain" placeholder="1000"><label>Highest prize (UGX)</label><input id="tHi" type="number" inputmode="numeric" class="input-field plain" placeholder="5000"><div class="err" id="mErr"></div><button class="btn-submit" id="mGo">Save prize level</button>`);
+      $("mGo").onclick = async () => {
+        const mn = Math.floor(Number($("tMin").value)), lo = Math.floor(Number($("tLo").value)), hi = Math.floor(Number($("tHi").value));
+        if (!(mn >= 0) || !(lo >= 0) || !(hi > 0) || hi < lo) return $("mErr").textContent = "Fill all three amounts. The highest prize must be the same or more than the lowest.";
+        const tiers = [...(raffleCfg.tiers || []).filter(t => Number(t.minDeposit) !== mn), { minDeposit: mn, minPrize: lo, maxPrize: hi }].sort((a, b) => a.minDeposit - b.minDeposit);
+        try { await setDoc(doc(db, "settings", "raffle"), { tiers, maxAll: Math.max(...tiers.map(t => t.maxPrize)), open: raffleCfg.open ?? false }, { merge: true }); closeModal(); } catch (e) { $("mErr").textContent = "Could not save. Check the rules are published."; }
+      };
+    }
+    else if (act === "rfDelTier") {
+      const tiers = (raffleCfg.tiers || []).slice().sort((a, b) => a.minDeposit - b.minDeposit); if (!confirm("Delete this prize level?")) return; tiers.splice(Number(id), 1);
+      await setDoc(doc(db, "settings", "raffle"), { tiers, maxAll: tiers.length ? Math.max(...tiers.map(t => t.maxPrize)) : 0 }, { merge: true });
+    }
+    else if (act === "markPrize") {
+      const x = prizes.find(y => y.id === id); if (!x) return;
+      if (!confirm("Confirm you have paid " + x.name + " " + fmt(x.amount) + "?")) return;
+      try {
+        const ref = await nextRef(), bt = writeBatch(db);
+        bt.update(doc(db, "raffleSpins", id), { paid: true, paidAt: serverTimestamp(), payoutRef: ref });
+        bt.set(doc(collection(db, "ledger")), { ref, type: "prize", uid: x.uid, name: x.name, phone: x.phone, savingId: "", planName: "Raffle prize", amount: Number(x.amount), total: Number(x.amount), by: myUid, byName: me.name, createdAt: serverTimestamp() });
+        await bt.commit();
+      } catch (err) { alert("Could not mark as paid. Check the rules are published. (" + (err.code || "error") + ")"); }
+    }
+    else if (act === "clearDraws") {
+      if (!confirm("Delete ALL winners? Every deposit gets its chance back.")) return;
+      const r = await getDocs(query(collection(db, "raffleSpins"), limit(400))); const bt = writeBatch(db); r.docs.forEach(d => bt.delete(d.ref)); await bt.commit(); alert("Raffle history cleared.");
+    }
+    else if (act === "delSaving") {
+      const x = mySavings.find(y => y.id === id) || allSavings.find(y => y.id === id); if (!x || !["cancelled", "awaiting"].includes(x.status)) return alert("Only cancelled or unconfirmed requests can be deleted.");
+      if (confirm("Delete this request?")) await deleteDoc(doc(db, "savings", id));
+    }
+    else if (act === "clearCancelled") {
+      const r = await getDocs(query(collection(db, "savings"), where("status", "==", "cancelled"), limit(400)));
+      if (r.empty) return alert("There are no cancelled requests.");
+      if (!confirm("Delete " + r.size + " cancelled request(s)?")) return;
+      const bt = writeBatch(db); r.docs.forEach(d => bt.delete(d.ref)); await bt.commit(); alert("Deleted " + r.size + " cancelled request(s).");
+    }
     else if (act === "viewReceipt") { const x = ledger.find(y => y.id === id); if (x) openReceipt(x); }
-    else if (act === "receiptFor") { const x = ledger.find(y => y.savingId === id && y.type === t.dataset.type); if (x) openReceipt(x); else alert("This receipt is not available."); }
+    else if (act === "receiptFor") { const x = ledger.find(y => y.savingId === id && y.type === el.dataset.type); if (x) openReceipt(x); else alert("This receipt is not available."); }
     else if (act === "approveUser") {
       const u = users.find(x => x.id === id);
       await updateDoc(doc(db, "users", id), { status: "approved" });
@@ -1063,27 +1137,19 @@ $("supportBtn").addEventListener("click", () => {
 
 // lucky draw (admin): real random pick among approved members, saved for everyone to see
 let rot = 0;
-$("rfSave").addEventListener("click", async () => {
-  const lo = Math.floor(Number($("rfMin").value)), hi = Math.floor(Number($("rfMax").value));
-  if (!(lo >= 0) || !(hi > 0) || hi < lo) return alert("Enter a start amount, and a final amount that is the same or higher.");
-  await setDoc(doc(db, "settings", "raffle"), { minAmount: lo, maxAmount: hi }); alert("Raffle amounts saved.");
-});
-$("spinBtn").addEventListener("click", async () => {
-  let pool = [];
-  try { const r = await getDocs(query(collection(db, "users"), where("status", "==", "approved"), limit(1000))); pool = r.docs.map(d => ({ id: d.id, ...d.data() })); } catch (e) { dbErr(e); return alert("Could not load the members. Try again."); }
-  if (!pool.length) return alert("No members in the raffle.");
-  const lo = Number(raffleCfg.minAmount), hi = Number(raffleCfg.maxAmount), hasAmt = raffleCfg.maxAmount != null && hi > 0;
-  const amount = hasAmt ? Math.min(hi, Math.max(lo, Math.round((lo + Math.random() * (hi - lo)) / 100) * 100)) : 0;
-  const winner = pool[Math.floor(Math.random() * pool.length)];
+$("playBtn").addEventListener("click", async () => {
+  const ch = myChances(); if (!raffleCfg.open || !ch.length) return;
+  const dep = ch[0], tier = tierFor(Number(dep.amount));
+  $("playBtn").disabled = true;
+  const lo = Number(tier.minPrize), hi = Number(tier.maxPrize);
+  const amount = Math.min(hi, Math.max(lo, Math.round((lo + Math.random() * (hi - lo)) / 100) * 100));
+  const rec = { savingId: dep.id, uid: myUid, name: me.name, phone: me.phone, depositAmount: Number(dep.amount), tierMin: Number(tier.minDeposit), amount, paid: false, at: serverTimestamp() };
+  try { await setDoc(doc(db, "raffleSpins", dep.id), rec); }
+  catch (e) { renderRaffle(); return alert(e.code === "permission-denied" ? "This chance was already used, or the raffle has just closed." : "Could not play. Check your internet and try again."); }
   rot += 1440 + Math.floor(Math.random() * 360);
   $("wheelDisc").style.transform = `rotate(${rot}deg)`;
   $("raffleResult").textContent = "Spinning...";
-  $("spinBtn").disabled = true;
-  setTimeout(async () => {
-    $("raffleResult").textContent = "🎉 Winner: " + winner.name + (amount ? " - " + fmt(amount) : "");
-    await addDoc(collection(db, "draws"), { winnerName: winner.name, winnerUid: winner.id, prize: $("drawPrize").value.trim(), ...(amount ? { amount } : {}), at: serverTimestamp(), by: myUid });
-    $("spinBtn").disabled = false;
-  }, 5200);
+  setTimeout(() => { $("raffleResult").textContent = "🎉 You won " + fmt(amount) + "!"; }, 5200);
 });
 
 // share the app link
