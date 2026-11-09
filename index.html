@@ -268,6 +268,13 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div id="depAwait"></div>
   </div>
 
+  <div id="tabLedger" class="tab-content" style="display:none">
+    <h2 class="t">Receipts</h2>
+    <div id="lgTotals"></div>
+    <input class="input-field plain" id="lgQ" placeholder="Search by receipt number, name or phone" style="margin-bottom:12px">
+    <div id="lgList"></div>
+  </div>
+
   <div id="tabRecords" class="tab-content" style="display:none"><h2 class="t">My records</h2><div id="recordList"></div></div>
 
   <div id="tabMy" class="tab-content" style="display:none">
@@ -277,6 +284,7 @@ h2.t{text-align:center;margin:8px 0 14px}
       <div class="my-menu-item" data-tab="tabDeposit"><div class="my-icon-btn"><i class="fa-solid fa-wallet"></i></div><span class="my-menu-label">Deposit</span></div>
       <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-hand-holding-dollar"></i></div><span class="my-menu-label">Withdraw</span></div>
       <div class="my-menu-item" data-tab="tabRecords"><div class="my-icon-btn"><i class="fa-solid fa-credit-card"></i></div><span class="my-menu-label">Bill</span></div>
+      <div class="my-menu-item" data-tab="tabLedger"><div class="my-icon-btn"><i class="fa-solid fa-receipt"></i></div><span class="my-menu-label">Receipts</span></div>
       <div class="my-menu-item" data-tab="tabGuide"><div class="my-icon-btn"><i class="fa-solid fa-book-open"></i></div><span class="my-menu-label">Guide</span></div>
       <div class="my-menu-item" data-tab="tabNotices"><div class="my-icon-btn"><i class="fa-regular fa-bell"></i></div><span class="my-menu-label">Notices</span></div>
       <div class="my-menu-item" data-tab="tabChats"><div class="my-icon-btn"><i class="fa-solid fa-users"></i></div><span class="my-menu-label">Group</span></div>
@@ -315,7 +323,7 @@ h2.t{text-align:center;margin:8px 0 14px}
     <div class="sec">Plans</div><div id="aPlans"></div><button class="btn-small" id="addPlanBtn">+ Add plan</button>
     <div class="sec">Payment numbers (where members send money)</div><div id="aNums"></div><button class="btn-small" id="addNumBtn">+ Add number</button>
     <div class="sec">Post a notice</div><textarea id="noticeText" class="input-field plain" rows="3" placeholder="Write a notice for all members"></textarea><button class="btn-small" id="postNotice" style="margin-top:8px">Post notice</button>
-    <div class="sec">All members</div><div id="aMembers"></div>
+    <div class="sec">All members</div><p class="note" style="text-align:left">Shows the 200 newest members. Use Find to open anyone else by phone number.</p><div style="display:flex;gap:8px;margin-bottom:10px"><input class="input-field plain" id="mFind" type="tel" inputmode="numeric" placeholder="0772123456" style="flex:1"><button class="btn-small" id="mFindBtn">Find</button></div><div id="aMembers"></div>
     <p class="note">Rule: confirm a deposit only after the money has really reached the group (cash or mobile money). Pay a withdrawal only on or after its release date.</p>
   </div>
 
@@ -336,7 +344,7 @@ h2.t{text-align:center;margin:8px 0 14px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { initializeAuth, inMemoryPersistence, browserLocalPersistence, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, getDoc, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, getDoc, getDocs, getCountFromServer, getAggregateFromServer, count as fsCount, sum as fsSum, runTransaction, writeBatch, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ====== PASTE YOUR NEW FIREBASE PROJECT CONFIG HERE ======
 const firebaseConfig = {
@@ -372,12 +380,13 @@ function resetIdle() {
   if (!keep) idleT = setTimeout(() => { if (me) signOut(auth); }, 15 * 60 * 1000);
 }
 ["click", "touchstart", "keydown", "scroll"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
-const APP_VERSION = "2026-11-06 b";
+const APP_VERSION = "2026-11-08 a";
 document.querySelectorAll("[data-ver]").forEach(e => { e.textContent = "Version " + APP_VERSION; });
 const authMsg = e => ({ "auth/invalid-credential": "Wrong phone number or password.", "auth/user-not-found": "No account with this phone number.", "auth/wrong-password": "Wrong password.", "auth/email-already-in-use": "This phone number is already registered. Try logging in.", "auth/weak-password": "Password must be at least 6 characters.", "auth/invalid-email": "Enter a valid phone number.", "auth/network-request-failed": "No internet connection.", "auth/too-many-requests": "Too many tries. Wait a few minutes." }[e.code] || e.message);
 
 let me = null, myUid = null, isAdmin = false;
-let payNums = {}, general = {}, avatars = {}, raffleCfg = {};
+let ledger = [], payNums = {}, general = {}, avatars = {}, raffleCfg = {};
+let uRecent = [], uPending = [], uFound = [], memberCount = null, ledgerTotals = null;
 let resets = [], mySavings = [], allSavings = [], plans = [], users = [], notices = [], messages = [], draws = [];
 let unsubs = [];
 
@@ -393,6 +402,7 @@ function openTab(id, noPush) {
   document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.tab === id || (n.dataset.tab === "tabMy" && (id === "tabAdmin" || id === "tabMachines"))));
   window.scrollTo(0, 0);
   if (id === "tabChats") scrollChat();
+  if (id === "tabLedger" && isAdmin) loadLedgerTotals();
   if (!noPush && id !== curTab) history.pushState({ tab: id, d: ((history.state && history.state.d) || 0) + 1 }, "");
   curTab = id;
   renderAllNow();
@@ -401,6 +411,12 @@ function openTab(id, noPush) {
 window.addEventListener("popstate", e => {
   if (!$("dashContainer").classList.contains("active")) return;
   openTab(e.state && e.state.tab && $(e.state.tab) ? e.state.tab : "tabHome", true);
+});
+$("lgQ").addEventListener("input", renderLedger);
+$("mFindBtn").addEventListener("click", async () => {
+  let n = $("mFind").value.replace(/\D/g, ""); if (n.startsWith("0")) n = "256" + n.slice(1);
+  if (!/^256\d{9}$/.test(n)) return alert("Enter a valid number, e.g. 0772123456");
+  try { const r = await getDocs(query(collection(db, "users"), where("phone", "==", n), limit(1))); if (r.empty) return alert("No member with that number."); uFound = [...uFound.filter(u => u.id !== r.docs[0].id), { id: r.docs[0].id, ...r.docs[0].data() }]; mergeUsers(); renderAll(); } catch (e) { dbErr(e); alert("Could not search. Try again."); }
 });
 $("backBtn").addEventListener("click", () => { if (history.state && history.state.d > 0) history.back(); else openTab("tabHome"); });
 function modal(html) { $("modalBox").innerHTML = html; $("modal").classList.add("open"); }
@@ -504,6 +520,22 @@ function enterUser(user) {
   }, () => show("pendingPage")));
 }
 
+function dbErr(err) {
+  const code = (err && err.code) || "";
+  const msg = code === "resource-exhausted" ? "The app has reached its free daily limit on the server. It works again around 10 or 11 am Uganda time, or when the admin upgrades the plan." : code === "unavailable" ? "No connection to the server right now. Check your internet." : "";
+  if (!msg) return;
+  let b = $("dbBanner");
+  if (!b) { b = document.createElement("div"); b.id = "dbBanner"; b.style.cssText = "position:fixed;left:10px;right:10px;top:10px;z-index:9000;background:#7c2d12;color:#fff;padding:12px 14px;border-radius:12px;font:15px sans-serif;text-align:center"; b.onclick = () => b.remove(); document.body.appendChild(b); }
+  b.textContent = msg;
+}
+const mergeUsers = () => { const m = new Map(); [...uFound, ...uPending, ...uRecent].forEach(u => m.set(u.id, u)); users = [...m.values()]; };
+async function refreshCount() { try { const r = await getCountFromServer(query(collection(db, "users"), where("status", "==", "approved"))); memberCount = r.data().count; renderAll(); } catch (e) { dbErr(e); } }
+async function loadLedgerTotals() {
+  try {
+    const [a, b] = await Promise.all([getAggregateFromServer(query(collection(db, "ledger"), where("type", "==", "deposit")), { total: fsSum("amount"), n: fsCount() }), getAggregateFromServer(query(collection(db, "ledger"), where("type", "==", "payout")), { total: fsSum("total"), n: fsCount() })]);
+    ledgerTotals = { inn: a.data().total || 0, out: b.data().total || 0, n: a.data().n + b.data().n }; renderLedger();
+  } catch (e) { dbErr(e); }
+}
 let started = false;
 function startApp() {
   if (started) { renderAll(); return; }
@@ -511,18 +543,25 @@ function startApp() {
   show("dashContainer"); openTab("tabHome");
   document.querySelectorAll(".adminOnly").forEach(x => x.style.display = isAdmin ? "" : "none");
   $("drawAdmin").style.display = isAdmin ? "block" : "none";
-  const savQ = isAdmin ? collection(db, "savings") : query(collection(db, "savings"), where("phone", "==", me.phone));
-  unsubs.push(onSnapshot(savQ, s => { const a = s.docs.map(d => ({ id: d.id, ...d.data() })); if (isAdmin) allSavings = a; mySavings = isAdmin ? a.filter(x => x.phone === me.phone) : a; renderAll(); }));
-  unsubs.push(onSnapshot(doc(db, "settings", "avatars"), sn => { avatars = sn.exists() ? sn.data() : {}; renderChat(); }, () => { }));
-  unsubs.push(onSnapshot(doc(db, "settings", "raffle"), sn => { raffleCfg = sn.exists() ? sn.data() : {}; renderRaffle(); }, () => { }));
-  unsubs.push(onSnapshot(doc(db, "settings", "general"), sn => { general = sn.exists() ? sn.data() : {}; renderAll(); }, () => { }));
-  unsubs.push(onSnapshot(doc(db, "settings", "payNumbers"), sn => { payNums = sn.exists() ? sn.data() : {}; renderAll(); }, () => { }));
-  unsubs.push(onSnapshot(collection(db, "plans"), s => { plans = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
-  unsubs.push(onSnapshot(collection(db, "notices"), s => { notices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }));
-  unsubs.push(onSnapshot(query(collection(db, "messages"), orderBy("at", "desc"), limit(100)), s => { messages = s.docs.map(d => ({ id: d.id, ...d.data() })).reverse(); renderChat(); }));
-  unsubs.push(onSnapshot(collection(db, "draws"), s => { draws = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderDraws(); }));
-  if (isAdmin) unsubs.push(onSnapshot(collection(db, "resetRequests"), s => { resets = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }));
-  if (isAdmin) unsubs.push(onSnapshot(collection(db, "users"), s => { users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }));
+  if (isAdmin) {
+    unsubs.push(onSnapshot(query(collection(db, "savings"), where("status", "in", ["awaiting", "active", "withdraw_requested"])), s => { allSavings = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, dbErr));
+    unsubs.push(onSnapshot(query(collection(db, "savings"), where("phone", "==", me.phone)), s => { mySavings = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, dbErr));
+  } else unsubs.push(onSnapshot(query(collection(db, "savings"), where("phone", "==", me.phone)), s => { mySavings = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, dbErr));
+  unsubs.push(onSnapshot(doc(db, "settings", "avatars"), sn => { avatars = sn.exists() ? sn.data() : {}; renderChat(); }, dbErr));
+  unsubs.push(onSnapshot(doc(db, "settings", "raffle"), sn => { raffleCfg = sn.exists() ? sn.data() : {}; renderRaffle(); }, dbErr));
+  unsubs.push(onSnapshot(doc(db, "settings", "general"), sn => { general = sn.exists() ? sn.data() : {}; renderAll(); }, dbErr));
+  unsubs.push(onSnapshot(doc(db, "settings", "payNumbers"), sn => { payNums = sn.exists() ? sn.data() : {}; renderAll(); }, dbErr));
+  unsubs.push(onSnapshot(isAdmin ? query(collection(db, "ledger"), orderBy("createdAt", "desc"), limit(100)) : query(collection(db, "ledger"), where("phone", "==", me.phone)), sn => { ledger = sn.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.createdAt) - ms(a.createdAt)); renderAll(); }, dbErr));
+  unsubs.push(onSnapshot(collection(db, "plans"), s => { plans = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, dbErr));
+  unsubs.push(onSnapshot(query(collection(db, "notices"), orderBy("at", "desc"), limit(20)), s => { notices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }, dbErr));
+  unsubs.push(onSnapshot(query(collection(db, "messages"), orderBy("at", "desc"), limit(30)), s => { messages = s.docs.map(d => ({ id: d.id, ...d.data() })).reverse(); renderChat(); }, dbErr));
+  unsubs.push(onSnapshot(query(collection(db, "draws"), orderBy("at", "desc"), limit(10)), s => { draws = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderDraws(); }, dbErr));
+  if (isAdmin) unsubs.push(onSnapshot(query(collection(db, "resetRequests"), limit(50)), s => { resets = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b.at) - ms(a.at)); renderAll(); }, dbErr));
+  if (isAdmin) {
+    unsubs.push(onSnapshot(query(collection(db, "users"), orderBy("createdAt", "desc"), limit(200)), s => { uRecent = s.docs.map(d => ({ id: d.id, ...d.data() })); mergeUsers(); renderAll(); }, dbErr));
+    unsubs.push(onSnapshot(query(collection(db, "users"), where("status", "==", "pending")), s => { uPending = s.docs.map(d => ({ id: d.id, ...d.data() })); mergeUsers(); renderAll(); }, dbErr));
+    refreshCount(); setInterval(refreshCount, 600000);
+  }
 }
 onAuthStateChanged(auth, u => { if (!u) started = false; });
 
@@ -544,6 +583,59 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-copy
 const wdHours = () => Number(general.withdrawHours || 0);
 const dueOf = s => ms(s.withdrawRequestedAt) ? ms(s.withdrawRequestedAt) + wdHours() * 36e5 : 0;
 const cdpText = t => { const d = t - now(); if (d <= 0) return "Due now"; const z = n => String(n).padStart(2, "0"); return `${Math.floor(d / 36e5)}h ${z(Math.floor(d % 36e5 / 6e4))}m ${z(Math.floor(d % 6e4 / 1e3))}s`; };
+async function nextRef() {
+  const cref = doc(db, "settings", "counter");
+  const n = await runTransaction(db, async t => { const sn = await t.get(cref); const v = (sn.exists() ? Number(sn.data().n) : 0) + 1; t.set(cref, { n: v }); return v; });
+  return "AJX-" + String(n).padStart(6, "0");
+}
+const receiptLines = e => {
+  const L = [["Reference", e.ref], ["Date", dt(e.createdAt)], ["Member", e.name], ["Phone", "+" + e.phone], ["Machine", e.planName || "-"]];
+  if (e.type === "deposit") L.push(["Amount received", fmt(e.amount)], ["Paid by", (e.provider === "AIRTEL" ? "Airtel Money" : "MTN MoMo") + (e.payerPhone ? " +" + e.payerPhone : "")], ["Lock period", e.lockDays + " days"], ["Daily commission", fmt(e.dailyAmount || 0)], ["First day", eatDate(e.startDay)], ["Last day", eatDate(e.lastDay)]);
+  else L.push(["Savings returned", fmt(e.amount)], ["Commission", fmt(e.commission || 0)], ["Total paid", fmt(e.total)]);
+  L.push(["Confirmed by", e.byName || "Admin"]);
+  return L;
+};
+function receiptCanvas(e) {
+  const L = receiptLines(e), W = 900, H = 400 + L.length * 74 + 150, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  g.fillStyle = "#0B1B3A"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#ffffff"; rr(40, 40, W - 80, H - 80, 30); g.fill();
+  g.save(); g.translate(70, 70); g.scale(1.15, 1.15);
+  g.fillStyle = "#1FB6FF"; g.fill(new Path2D("M22 23 L50 18 L50 82 C34 78 22 66 22 53 Z")); g.fillStyle = "#1496EB"; g.fill(new Path2D("M50 18 L78 23 L78 53 C78 66 66 78 50 82 Z"));
+  g.fillStyle = "#F7B801"; g.beginPath(); g.arc(50, 48, 15, 0, 7); g.fill(); g.restore();
+  g.fillStyle = "#0B1B3A"; g.font = "bold 46px sans-serif"; g.textAlign = "left"; g.fillText("AJX Savings Hub", 230, 125);
+  g.fillStyle = "#64748b"; g.font = "30px sans-serif"; g.fillText("OFFICIAL RECEIPT", 230, 170);
+  const dep = e.type === "deposit"; g.fillStyle = dep ? "#047857" : "#1d4ed8"; rr(70, 240, W - 140, 90, 20); g.fill();
+  g.fillStyle = "#fff"; g.font = "bold 40px sans-serif"; g.textAlign = "center"; g.fillText(dep ? "DEPOSIT RECEIVED" : "PAYOUT PAID", W / 2, 298);
+  let y = 410; g.textAlign = "left";
+  L.forEach(([k, v], i) => {
+    g.fillStyle = "#64748b"; g.font = "30px sans-serif"; g.textAlign = "left"; g.fillText(k, 80, y);
+    g.fillStyle = "#0B1B3A"; g.font = (k === "Total paid" || k === "Amount received" ? "bold 36px" : "bold 32px") + " sans-serif"; g.textAlign = "right"; g.fillText(String(v), W - 80, y);
+    g.strokeStyle = "#e2e8f0"; g.lineWidth = 2; g.beginPath(); g.moveTo(80, y + 24); g.lineTo(W - 80, y + 24); g.stroke(); y += 74;
+  });
+  g.fillStyle = "#94a3b8"; g.font = "26px sans-serif"; g.textAlign = "center"; g.fillText("Keep this receipt. It comes from the group's permanent ledger.", W / 2, H - 90);
+  return c;
+}
+function openReceipt(e) {
+  const c = receiptCanvas(e);
+  modal(`<h3>${esc(e.ref)}</h3><img src="${c.toDataURL("image/png")}" alt="Receipt" style="width:100%;border-radius:12px;margin-bottom:12px"><button class="btn-submit" id="rcShare">Share or save image</button><button class="btn-small grey" id="rcClose" style="width:100%;margin-top:10px;padding:12px">Close</button>`);
+  $("rcClose").onclick = closeModal;
+  $("rcShare").onclick = () => c.toBlob(async b => {
+    const f = new File([b], e.ref + ".png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: e.ref, text: "AJX Savings Hub receipt " + e.ref }); } catch (x) { } }
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = e.ref + ".png"; a.click(); }
+  }, "image/png");
+}
+function renderLedger() {
+  const q = ($("lgQ").value || "").trim().toLowerCase();
+  if (isAdmin) {
+    const inn = ledgerTotals ? ledgerTotals.inn : 0, out = ledgerTotals ? ledgerTotals.out : 0, nEntries = ledgerTotals ? ledgerTotals.n : "...";
+    $("lgTotals").innerHTML = `<div class="grid-2"><div class="stat-card"><div class="stat-val">${fmt(inn)}</div><div class="stat-label">Money in (deposits)</div></div><div class="stat-card"><div class="stat-val">${fmt(out)}</div><div class="stat-label">Money out (payouts)</div></div></div><div class="grid-2"><div class="stat-card"><div class="stat-val">${fmt(inn - out)}</div><div class="stat-label">Balance held</div></div><div class="stat-card"><div class="stat-val">${nEntries}</div><div class="stat-label">Entries (all time)</div></div></div>`;
+  } else $("lgTotals").innerHTML = "";
+  const list = ledger.filter(x => !q || [x.ref, x.name, x.phone, x.planName].join(" ").toLowerCase().includes(q));
+  $("lgList").innerHTML = list.map(x => `<div class="card"><div class="title">${esc(x.ref)} <span class="tag ${x.type === "deposit" ? "active" : "ready"}">${x.type === "deposit" ? "Deposit" : "Payout"}</span></div><div class="row"><span>Date</span><span>${dt(x.createdAt)}</span></div>${isAdmin ? `<div class="row"><span>Member</span><span>${esc(x.name)}</span></div>` : ""}<div class="row"><span>Machine</span><span>${esc(x.planName || "-")}</span></div><div class="row"><span>${x.type === "deposit" ? "Amount" : "Total paid"}</span><span style="font-weight:800">${fmt(x.type === "deposit" ? x.amount : x.total)}</span></div><div class="actions"><button class="btn-small" data-act="viewReceipt" data-id="${x.id}">View receipt</button></div></div>`).join("") || `<div class="empty">No receipts yet. They appear here after a deposit is confirmed or a payout is made.</div>`;
+}
 const FLOW = ["Request", "Sent", "Active", "Ready", "Payout", "Paid"];
 const flowStep = s => s.status === "cancelled" ? -1 : s.status === "paid" ? 5 : s.status === "withdraw_requested" ? 4 : s.status === "active" ? (isReady(s) ? 3 : 2) : s.sentAt ? 1 : 0;
 const FLOW_NOTE = ["Send the money to the number shown, then tap I have sent the money.", "Waiting for the admin to confirm your money.", "Your days are counting. Withdraw opens on the release date.", "Ready. Tap Withdraw on the Home screen.", "Withdrawal requested. The admin will pay your phone.", "Paid out. Thank you."];
@@ -593,7 +685,7 @@ function renderAllNow() {
   const nxt = mySavings.filter(s => s.status === "active" && !isReady(s)).map(s => ms(s.releaseAt)).sort((a, b) => a - b)[0];
   $("hNext").textContent = nxt ? dd(nxt) : "-";
   $("bNext").dataset.t = nxt || 0; $("bNext").textContent = nxt ? cdText(nxt) : "-";
-  $("hMembers").textContent = isAdmin ? users.filter(u => u.status === "approved").length : "-";
+  $("hMembers").textContent = isAdmin ? (memberCount ?? "...") : "-";
   $("mLocked").textContent = $("hSaved").textContent; $("mReady").textContent = $("hReady").textContent;
   $("myName").textContent = me.name; $("myPhone").textContent = "+" + me.phone; $("myRole").textContent = isAdmin ? "Admin" : "Member";
   const nl = n => `<div class="msg-item">${esc(n.text)}<small>${dt(n.at)}</small></div>`;
@@ -601,6 +693,7 @@ function renderAllNow() {
   $("noticeList").innerHTML = notices.map(n => `<div class="card">${esc(n.text)}<div class="row" style="margin-top:6px"><span>${dt(n.at)}</span>${isAdmin ? `<span><a style="color:#fca5a5;cursor:pointer" data-act="delNotice" data-id="${n.id}">Delete</a></span>` : ""}</div></div>`).join("") || `<div class="empty">No notices yet</div>`;
   if (curTab === "tabPlans" || curTab === "tabDeposit") renderPlans();
   if (curTab === "tabRecords") renderRecords();
+  if (curTab === "tabLedger") renderLedger();
   if (isAdmin && (curTab === "tabAdmin" || curTab === "tabMachines")) renderAdmin();
 }
 const SERIES = ["All", "A-series", "B-series", "C-series", "D-series"];
@@ -635,11 +728,11 @@ function pickImage() {
       const f = inp.files && inp.files[0]; if (!f) return resolve(null);
       const url = URL.createObjectURL(f), img = new Image();
       img.onload = () => {
-        const k = Math.min(1, 560 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+        const k = Math.min(1, 420 / Math.max(img.width, img.height)), c = document.createElement("canvas");
         c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        let out = c.toDataURL("image/jpeg", 0.62);
-        if (out.length > 250000) out = c.toDataURL("image/jpeg", 0.45);
+        let out = c.toDataURL("image/jpeg", 0.55);
+        if (out.length > 90000) out = c.toDataURL("image/jpeg", 0.4);
         URL.revokeObjectURL(url); resolve(out);
       };
       img.onerror = () => reject(new Error("Could not read that photo."));
@@ -685,6 +778,7 @@ function renderRecords() {
     return `<div class="card"><div class="title">${esc(s.planName)} <span class="tag ${st}">${stateText(s)}</span></div>
       ${flowHtml(s)}
       <div class="row"><span>Amount</span><span>${fmt(s.amount)}</span></div>
+      ${s.depositRef ? `<div class="row"><span>Deposit receipt</span><span><button class="btn-small" data-act="receiptFor" data-id="${s.id}" data-type="deposit">${esc(s.depositRef)}</button></span></div>` : ""}${s.payoutRef ? `<div class="row"><span>Payout receipt</span><span><button class="btn-small" data-act="receiptFor" data-id="${s.id}" data-type="payout">${esc(s.payoutRef)}</button></span></div>` : ""}
       <div class="row"><span>Lock</span><span>${s.lockDays} days</span></div>
       <div class="row"><span>Requested</span><span>${dt(s.createdAt)}</span></div>
       ${s.status === "awaiting" ? `<div class="note" style="text-align:left;margin:8px 0 4px">${s.sentAt ? "You said you sent the money. Waiting for the admin to confirm." : "Send " + fmt(s.amount) + " to:"}</div>${s.sentAt ? "" : payToList(s.provider)}` : ""}
@@ -871,9 +965,26 @@ async function action(act, id, el) {
       const s = allSavings.find(x => x.id === id);
       if (confirm(`Confirm that ${fmt(s.amount)} was received from ${s.name}?`))
       { const pl = plans.find(x => x.id === s.planId), daily = pl && pl.dailyAmount && pl.minAmount ? Math.round(Number(pl.dailyAmount) * Number(s.amount) / Number(pl.minAmount)) : 0;
-        await updateDoc(doc(db, "savings", id), { status: "active", activatedAt: Timestamp.fromMillis(now()), releaseAt: Timestamp.fromMillis(dayStart(now()) + Number(s.lockDays) * 864e5), confirmedBy: myUid, dailyAmount: daily }); }
+        try {
+          const ref = await nextRef(), t0 = now(), bt = writeBatch(db);
+          bt.update(doc(db, "savings", id), { status: "active", activatedAt: Timestamp.fromMillis(t0), releaseAt: Timestamp.fromMillis(dayStart(t0) + Number(s.lockDays) * 864e5), confirmedBy: myUid, dailyAmount: daily, depositRef: ref });
+          bt.set(doc(collection(db, "ledger")), { ref, type: "deposit", uid: s.uid, name: s.name, phone: s.phone, savingId: id, planName: s.planName || "", amount: Number(s.amount), provider: s.provider || "", payerPhone: s.payerPhone || "", lockDays: Number(s.lockDays), dailyAmount: daily, startDay: dayStart(t0), lastDay: dayStart(t0) + (Number(s.lockDays) - 1) * 864e5, by: myUid, byName: me.name, createdAt: serverTimestamp() });
+          await bt.commit();
+        } catch (err) { alert("Could not confirm. Check the rules are published and try again. (" + (err.code || "error") + ")"); } }
     }
-    else if (act === "markPaid") { if (confirm("Confirm you have paid this member?")) await updateDoc(doc(db, "savings", id), { status: "paid", paidAt: serverTimestamp(), paidBy: myUid }); }
+    else if (act === "markPaid") {
+      const s = allSavings.find(x => x.id === id); if (!s) return;
+      const comm = earnOf(s), total = Number(s.amount) + comm;
+      if (!confirm("Confirm you have paid " + s.name + " " + fmt(total) + "?")) return;
+      try {
+        const ref = await nextRef(), bt = writeBatch(db);
+        bt.update(doc(db, "savings", id), { status: "paid", paidAt: serverTimestamp(), paidBy: myUid, payoutRef: ref, paidCommission: comm, paidTotal: total });
+        bt.set(doc(collection(db, "ledger")), { ref, type: "payout", uid: s.uid, name: s.name, phone: s.phone, savingId: id, planName: s.planName || "", amount: Number(s.amount), commission: comm, total, by: myUid, byName: me.name, createdAt: serverTimestamp() });
+        await bt.commit();
+      } catch (err) { alert("Could not mark as paid. Check the rules are published and try again. (" + (err.code || "error") + ")"); }
+    }
+    else if (act === "viewReceipt") { const x = ledger.find(y => y.id === id); if (x) openReceipt(x); }
+    else if (act === "receiptFor") { const x = ledger.find(y => y.savingId === id && y.type === t.dataset.type); if (x) openReceipt(x); else alert("This receipt is not available."); }
     else if (act === "approveUser") {
       const u = users.find(x => x.id === id);
       await updateDoc(doc(db, "users", id), { status: "approved" });
@@ -958,7 +1069,8 @@ $("rfSave").addEventListener("click", async () => {
   await setDoc(doc(db, "settings", "raffle"), { minAmount: lo, maxAmount: hi }); alert("Raffle amounts saved.");
 });
 $("spinBtn").addEventListener("click", async () => {
-  const pool = users.filter(u => u.status === "approved");
+  let pool = [];
+  try { const r = await getDocs(query(collection(db, "users"), where("status", "==", "approved"), limit(1000))); pool = r.docs.map(d => ({ id: d.id, ...d.data() })); } catch (e) { dbErr(e); return alert("Could not load the members. Try again."); }
   if (!pool.length) return alert("No members in the raffle.");
   const lo = Number(raffleCfg.minAmount), hi = Number(raffleCfg.maxAmount), hasAmt = raffleCfg.maxAmount != null && hi > 0;
   const amount = hasAmt ? Math.min(hi, Math.max(lo, Math.round((lo + Math.random() * (hi - lo)) / 100) * 100)) : 0;
